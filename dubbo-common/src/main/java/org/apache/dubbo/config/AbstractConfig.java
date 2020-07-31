@@ -111,6 +111,7 @@ public abstract class AbstractConfig implements Serializable {
         appendParameters(parameters, config, null);
     }
 
+    //将配置对象的属性，添加到参数集合
     @SuppressWarnings("unchecked")
     public static void appendParameters(Map<String, String> parameters, Object config, String prefix) {
         if (config == null) {
@@ -127,8 +128,10 @@ public abstract class AbstractConfig implements Serializable {
                     }
                     String key;
                     if (parameter != null && parameter.key().length() > 0) {
+                        //注解key
                         key = parameter.key();
                     } else {
+                        //get 或者 is 后面截取的名字
                         key = calculatePropertyFromGetter(name);
                     }
                     Object value = method.invoke(config);
@@ -146,6 +149,9 @@ public abstract class AbstractConfig implements Serializable {
                         if (prefix != null && prefix.length() > 0) {
                             key = prefix + "." + key;
                         }
+                        //获得属性值，存在则添加到 `parameters` 集合
+                        //key = 方法get或is后面名字，或注解key属性
+                        //str = 方法调用后的值
                         parameters.put(key, str);
                     } else if (parameter != null && parameter.required()) {
                         throw new IllegalStateException(config.getClass().getSimpleName() + "." + key + " == null");

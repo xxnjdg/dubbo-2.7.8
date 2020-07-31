@@ -101,6 +101,7 @@ import static org.apache.dubbo.rpc.Constants.SCOPE_REMOTE;
 import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 import static org.apache.dubbo.rpc.cluster.Constants.EXPORT_KEY;
 
+//服务提供者暴露服务配置类。
 public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     public static final Logger logger = LoggerFactory.getLogger(ServiceConfig.class);
@@ -180,6 +181,12 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         dispatch(new ServiceConfigUnexportedEvent(this));
     }
 
+    /**
+     * 进一步初始化 ServiceConfig 对象。
+     * 校验 ServiceConfig 对象的配置项。
+     * 使用 ServiceConfig 对象，生成 Dubbo URL 对象数组。
+     * 使用 Dubbo URL 对象，暴露服务。
+     */
     public synchronized void export() {
         if (!shouldExport()) {
             return;

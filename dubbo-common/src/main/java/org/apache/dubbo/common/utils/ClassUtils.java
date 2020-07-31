@@ -281,6 +281,7 @@ public class ClassUtils {
 
     /**
      * The specified type is primitive type or simple type
+     * 指定的类型是原始类型或简单类型
      *
      * @param type the type to test
      * @return

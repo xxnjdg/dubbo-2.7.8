@@ -56,6 +56,12 @@ public class Application {
         service.setRef(new DemoServiceImpl());
         service.setApplication(new ApplicationConfig("dubbo-demo-api-provider"));
         service.setRegistry(new RegistryConfig("zookeeper://127.0.0.1:2181"));
+        /**
+         * 进一步初始化 ServiceConfig 对象。
+         * 校验 ServiceConfig 对象的配置项。
+         * 使用 ServiceConfig 对象，生成 Dubbo URL 对象数组。
+         * 使用 Dubbo URL 对象，暴露服务。
+         */
         service.export();
 
         System.out.println("dubbo service started");

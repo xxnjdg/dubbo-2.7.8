@@ -36,6 +36,9 @@ public @interface Parameter {
 
     boolean excluded() default false;
 
+    /**
+     * 是否转义
+     */
     boolean escaped() default false;
 
     boolean attribute() default false;
