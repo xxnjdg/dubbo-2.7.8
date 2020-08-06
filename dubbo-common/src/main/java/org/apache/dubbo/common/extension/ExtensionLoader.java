@@ -84,30 +84,37 @@ public class ExtensionLoader<T> {
     private static final Logger logger = LoggerFactory.getLogger(ExtensionLoader.class);
 
     private static final Pattern NAME_SEPARATOR = Pattern.compile("\\s*[,]+\\s*");
-
+    //展点接口  new ExtensionLoader<T>(扩展点接口)
     private static final ConcurrentMap<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<>(64);
-
+    //
     private static final ConcurrentMap<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<>(64);
-
+    //扩展点接口
     private final Class<?> type;
 
-    private final ExtensionFactory objectFactory;
-
+    private final ExtensionFactory objectFactory;//AdaptiveExtensionFactory
+    //假设org.apache.dubbo.common.extension.ExtensionFactory 文件
+    //adaptive=org.apache.dubbo.common.extension.factory.AdaptiveExtensionFactory
+    //spi=org.apache.dubbo.common.extension.factory.SpiExtensionFactory
+    //cachedNames cachedClasses 存的東西剛好反過來 读到
+    //为什么没有adaptive=org.apache.dubbo.common.extension.factory.AdaptiveExtensionFactory 因为该类有@Adaptive注解不存在这里
+    //class = org.apache.dubbo.common.extension.factory.SpiExtensionFactory name = spi
     private final ConcurrentMap<Class<?>, String> cachedNames = new ConcurrentHashMap<>();
 
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
 
     private final Map<String, Object> cachedActivates = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();
-    private final Holder<Object> cachedAdaptiveInstance = new Holder<>();
-    private volatile Class<?> cachedAdaptiveClass = null;
-    private String cachedDefaultName;
+    private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();//cachedNames class 实例化
+    private final Holder<Object> cachedAdaptiveInstance = new Holder<>();//存有@Adaptive注解类 实例化 本质是代理类
+    private volatile Class<?> cachedAdaptiveClass = null;//存有@Adaptive注解类 AdaptiveExtensionFactory 本质是代理类
+    private String cachedDefaultName;//如果接口spi value有值就缓存到 cachedDefaultName
     private volatile Throwable createAdaptiveInstanceError;
 
     private Set<Class<?>> cachedWrapperClasses;
 
     private Map<String, IllegalStateException> exceptions = new ConcurrentHashMap<>();
 
+    //LoadingStrategy.class
+    // dubbo-common/src/main/resources/META-INF/services/org.apache.dubbo.common.extension.LoadingStrategy3个实现类，默认java spi
     private static volatile LoadingStrategy[] strategies = loadLoadingStrategies();
 
     public static void setLoadingStrategies(LoadingStrategy... strategies) {
@@ -623,6 +630,10 @@ public class ExtensionLoader<T> {
         return new IllegalStateException(buf.toString());
     }
 
+    //1 实例化扩展点
+    //2 处理自动注入,ioc
+    //3 处理包装类，aop
+    //4 如果实现了 Lifecycle 初始化
     @SuppressWarnings("unchecked")
     private T createExtension(String name, boolean wrap) {
         Class<?> clazz = getExtensionClasses().get(name);
@@ -641,7 +652,7 @@ public class ExtensionLoader<T> {
             if (wrap) {
 
                 List<Class<?>> wrapperClassesList = new ArrayList<>();
-                if (cachedWrapperClasses != null) {
+                if (cachedWrapperClasses != null) {//是否存在包装类
                     wrapperClassesList.addAll(cachedWrapperClasses);
                     wrapperClassesList.sort(WrapperComparator.COMPARATOR);
                     Collections.reverse(wrapperClassesList);
@@ -669,16 +680,16 @@ public class ExtensionLoader<T> {
     private boolean containsExtension(String name) {
         return getExtensionClasses().containsKey(name);
     }
-
+    //自动注入，获取set方法的类实例
     private T injectExtension(T instance) {
 
-        if (objectFactory == null) {
+        if (objectFactory == null) {//只有ExtensionFactory才是null,其他扩展点不符合条件
             return instance;
         }
 
         try {
             for (Method method : instance.getClass().getMethods()) {
-                if (!isSetter(method)) {
+                if (!isSetter(method)) {//寻找set方法
                     continue;
                 }
                 /**
@@ -694,9 +705,9 @@ public class ExtensionLoader<T> {
 
                 try {
                     String property = getSetterProperty(method);
-                    Object object = objectFactory.getExtension(pt, property);
+                    Object object = objectFactory.getExtension(pt, property);//自动注入，获取set方法的类实例
                     if (object != null) {
-                        method.invoke(instance, object);
+                        method.invoke(instance, object);//执行set方法
                     }
                 } catch (Exception e) {
                     logger.error("Failed to inject via method " + method.getName()
@@ -782,7 +793,7 @@ public class ExtensionLoader<T> {
     }
 
     /**
-     * extract and cache default extension name if exists
+     * extract and cache default extension name if exists 提取并缓存默认扩展名（如果存在）
      */
     private void cacheDefaultExtensionName() {
         final SPI defaultAnnotation = type.getAnnotation(SPI.class);
@@ -798,7 +809,7 @@ public class ExtensionLoader<T> {
                         + ": " + Arrays.toString(names));
             }
             if (names.length == 1) {
-                cachedDefaultName = names[0];
+                cachedDefaultName = names[0];//如果接口spi value有值就缓存到 cachedDefaultName
             }
         }
     }

@@ -36,7 +36,7 @@ import static org.apache.dubbo.metadata.ServiceNameMapping.getDefaultExtension;
  */
 public class ServiceNameMappingListener implements EventListener<ServiceConfigExportedEvent> {
 
-    private final ServiceNameMapping serviceNameMapping = getDefaultExtension();
+    private final ServiceNameMapping serviceNameMapping = getDefaultExtension();//CompositeServiceNameMapping
 
     @Override
     public void onEvent(ServiceConfigExportedEvent event) {

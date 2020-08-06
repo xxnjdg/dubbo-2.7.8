@@ -66,9 +66,9 @@ public class AdaptiveClassCodeGenerator {
     private static final String CODE_EXTENSION_ASSIGNMENT = "%s extension = (%<s)%s.getExtensionLoader(%s.class).getExtension(extName);\n";
 
     private static final String CODE_EXTENSION_METHOD_INVOKE_ARGUMENT = "arg%d";
-
+    //扩展点
     private final Class<?> type;
-
+    // 扩展点名字
     private String defaultExtName;
 
     public AdaptiveClassCodeGenerator(Class<?> type, String defaultExtName) {

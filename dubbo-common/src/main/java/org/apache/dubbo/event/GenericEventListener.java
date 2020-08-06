@@ -56,7 +56,7 @@ public abstract class GenericEventListener implements EventListener<Event> {
         this.onEventMethod = findOnEventMethod();
         this.handleEventMethods = findHandleEventMethods();
     }
-
+    //寻找本类onEvent方法
     private Method findOnEventMethod() {
         return execute(getClass(), listenerClass -> listenerClass.getMethod("onEvent", Event.class));
     }

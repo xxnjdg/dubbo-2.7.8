@@ -146,9 +146,9 @@ public class DubboBootstrap extends GenericEventListener {
 
     private final ExecutorService executorService = newSingleThreadExecutor();
 
-    private final EventDispatcher eventDispatcher = EventDispatcher.getDefaultExtension();
+    private final EventDispatcher eventDispatcher = EventDispatcher.getDefaultExtension();//DirectEventDispatcher
 
-    private final ExecutorRepository executorRepository = getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
+    private final ExecutorRepository executorRepository = getExtensionLoader(ExecutorRepository.class).getDefaultExtension();//DefaultExecutorRepository
 
     private final ConfigManager configManager;
 
