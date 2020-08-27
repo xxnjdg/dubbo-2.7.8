@@ -72,7 +72,7 @@ public class UrlUtils {
         if (address.contains("://") || address.contains(URL_PARAM_STARTING_SYMBOL)) {
             url = address;
         } else {
-            String[] addresses = COMMA_SPLIT_PATTERN.split(address);
+            String[] addresses = COMMA_SPLIT_PATTERN.split(address);//以，分割得到多个
             url = addresses[0];
             if (addresses.length > 1) {
                 StringBuilder backup = new StringBuilder();
@@ -85,14 +85,14 @@ public class UrlUtils {
                 url += URL_PARAM_STARTING_SYMBOL + RemotingConstants.BACKUP_KEY + "=" + backup.toString();
             }
         }
-        String defaultProtocol = defaults == null ? null : defaults.get(PROTOCOL_KEY);
+        String defaultProtocol = defaults == null ? null : defaults.get(PROTOCOL_KEY);//注册中心协议名字
         if (defaultProtocol == null || defaultProtocol.length() == 0) {
             defaultProtocol = DUBBO_PROTOCOL;
         }
-        String defaultUsername = defaults == null ? null : defaults.get(USERNAME_KEY);
-        String defaultPassword = defaults == null ? null : defaults.get(PASSWORD_KEY);
-        int defaultPort = StringUtils.parseInteger(defaults == null ? null : defaults.get(PORT_KEY));
-        String defaultPath = defaults == null ? null : defaults.get(PATH_KEY);
+        String defaultUsername = defaults == null ? null : defaults.get(USERNAME_KEY);//注册中心Username
+        String defaultPassword = defaults == null ? null : defaults.get(PASSWORD_KEY);//注册中心Password
+        int defaultPort = StringUtils.parseInteger(defaults == null ? null : defaults.get(PORT_KEY));//注册中心端口
+        String defaultPath = defaults == null ? null : defaults.get(PATH_KEY);//org.apache.dubbo.registry.RegistryService
         Map<String, String> defaultParameters = defaults == null ? null : new HashMap<>(defaults);
         if (defaultParameters != null) {
             defaultParameters.remove(PROTOCOL_KEY);
@@ -165,13 +165,13 @@ public class UrlUtils {
         if (address == null || address.length() == 0) {
             return null;
         }
-        String[] addresses = REGISTRY_SPLIT_PATTERN.split(address);
+        String[] addresses = REGISTRY_SPLIT_PATTERN.split(address);//以 | 或 ; 分割多个address
         if (addresses == null || addresses.length == 0) {
             return null; //here won't be empty
         }
         List<URL> registries = new ArrayList<URL>();
         for (String addr : addresses) {
-            registries.add(parseURL(addr, defaults));
+            registries.add(parseURL(addr, defaults));//核心方法 parseURL(addr, defaults)
         }
         return registries;
     }

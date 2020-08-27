@@ -212,7 +212,7 @@ public class RegistryConfig extends AbstractConfig {
         this.address = address;
         if (address != null) {
             try {
-                URL url = URL.valueOf(address);
+                URL url = URL.valueOf(address);//根据 address 构造了URL对象
 
                 // Refactor since 2.7.8
                 updatePropertyIfAbsent(this::getUsername, this::setUsername, url.getUsername());

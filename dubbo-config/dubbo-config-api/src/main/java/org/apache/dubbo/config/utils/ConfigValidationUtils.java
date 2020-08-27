@@ -165,7 +165,7 @@ public class ConfigValidationUtils {
      */
     private static final Pattern PATTERN_KEY = Pattern.compile("[*,\\-._0-9a-zA-Z]+");
 
-
+    //加载注册中心 URL 数组
     public static List<URL> loadRegistries(AbstractInterfaceConfig interfaceConfig, boolean provider) {
         // check && override if necessary
         List<URL> registryList = new ArrayList<URL>();
@@ -173,23 +173,25 @@ public class ConfigValidationUtils {
         List<RegistryConfig> registries = interfaceConfig.getRegistries();
         if (CollectionUtils.isNotEmpty(registries)) {
             for (RegistryConfig config : registries) {
+                // 获得注册中心的地址
                 String address = config.getAddress();
                 if (StringUtils.isEmpty(address)) {
                     address = ANYHOST_VALUE;
                 }
                 if (!RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) {
                     Map<String, String> map = new HashMap<String, String>();
-                    AbstractConfig.appendParameters(map, application);
-                    AbstractConfig.appendParameters(map, config);
+                    AbstractConfig.appendParameters(map, application);//application参数
+                    AbstractConfig.appendParameters(map, config);//注册中心参数
                     map.put(PATH_KEY, RegistryService.class.getName());
                     AbstractInterfaceConfig.appendRuntimeParameters(map);
                     if (!map.containsKey(PROTOCOL_KEY)) {
                         map.put(PROTOCOL_KEY, DUBBO_PROTOCOL);
                     }
-                    List<URL> urls = UrlUtils.parseURLs(address, map);
+                    List<URL> urls = UrlUtils.parseURLs(address, map);//address 和 map 合并转化成 URL对象
 
                     for (URL url : urls) {
 
+                        // 设置 `registry=${protocol}` 和 `protocol=registry` 到 URL
                         url = URLBuilder.from(url)
                                 .addParameter(REGISTRY_KEY, url.getProtocol())
                                 .setProtocol(extractRegistryType(url))

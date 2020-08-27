@@ -33,10 +33,10 @@ import java.util.Set;
  * ProviderModel is about published services
  */
 public class ProviderModel {
-    private String serviceKey;
-    private final Object serviceInstance;
-    private final ServiceDescriptor serviceModel;
-    private final ServiceConfigBase<?> serviceConfig;
+    private String serviceKey;//服务接口名字
+    private final Object serviceInstance;//实现服务接口的实例化对象
+    private final ServiceDescriptor serviceModel;//serviceKey对应的ServiceDescriptor对象
+    private final ServiceConfigBase<?> serviceConfig;//ServiceConfig对象
     private final List<RegisterStatedURL> urls;
 
     public ProviderModel(String serviceKey,
@@ -128,7 +128,7 @@ public class ProviderModel {
     /* *************** Start, metadata compatible **************** */
 
     private ServiceMetadata serviceMetadata;
-    private final Map<String, List<ProviderMethodModel>> methods = new HashMap<String, List<ProviderMethodModel>>();
+    private final Map<String, List<ProviderMethodModel>> methods = new HashMap<String, List<ProviderMethodModel>>();//key = 方法名字 value = List<ProviderMethodModel>
 
     public ProviderModel(String serviceKey,
                          Object serviceInstance,
@@ -178,7 +178,7 @@ public class ProviderModel {
         List<ProviderMethodModel> resultList = methods.get(methodName);
         return resultList == null ? Collections.emptyList() : resultList;
     }
-
+    //服务接口类
     private void initMethod(Class<?> serviceInterfaceClass) {
         Method[] methodsToExport;
         methodsToExport = serviceInterfaceClass.getMethods();

@@ -32,11 +32,11 @@ import java.util.Set;
  * We should merge them in the future.
  */
 public class ServiceDescriptor {
-    private final String serviceName;
-    private final Class<?> serviceInterfaceClass;
+    private final String serviceName;//服务接口名字
+    private final Class<?> serviceInterfaceClass;//服务接口
     // to accelerate search
-    private final Map<String, List<MethodDescriptor>> methods = new HashMap<>();
-    private final Map<String, Map<String, MethodDescriptor>> descToMethods = new HashMap<>();
+    private final Map<String, List<MethodDescriptor>> methods = new HashMap<>();// key 方法名字 value = List<MethodDescriptor>
+    private final Map<String, Map<String, MethodDescriptor>> descToMethods = new HashMap<>();//key = 方法名字 value = map( MethodDescriptor.getParamDesc getParamDesc )
 
     public ServiceDescriptor(Class<?> interfaceClass) {
         this.serviceInterfaceClass = interfaceClass;

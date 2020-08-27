@@ -319,8 +319,10 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 serviceMetadata
         );
 
+        // 加载注册中心 URL 数组
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
 
+        // 循环 `protocols` ，向逐个注册中心分组暴露服务。
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig)
                     .map(p -> p + "/" + path)
@@ -332,16 +334,17 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             doExportUrlsFor1Protocol(protocolConfig, registryURLs);
         }
     }
-
+    //基于单个协议，暴露服务
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
-        String name = protocolConfig.getName();
+        String name = protocolConfig.getName();//协议名
         if (StringUtils.isEmpty(name)) {
             name = DUBBO;
         }
-
+        //SIDE_KEY
         Map<String, String> map = new HashMap<String, String>();
         map.put(SIDE_KEY, PROVIDER_SIDE);
-
+        //MetricsConfig ModuleConfig ApplicationConfig ProviderConfig ProtocolConfig ServiceConfig
+        //appendRuntimeParameters 属性添加到map
         ServiceConfig.appendRuntimeParameters(map);
         AbstractConfig.appendParameters(map, getMetrics());
         AbstractConfig.appendParameters(map, getApplication());
@@ -355,6 +358,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         if (metadataReportConfig != null && metadataReportConfig.isValid()) {
             map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);
         }
+        // 将 MethodConfig 对象数组，添加到 `map` 集合中。
         if (CollectionUtils.isNotEmpty(getMethods())) {
             for (MethodConfig method : getMethods()) {
                 AbstractConfig.appendParameters(map, method, method.getName());
@@ -410,17 +414,17 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 }
             } // end of methods for
         }
-
+        //methods generic
         if (ProtocolUtils.isGeneric(generic)) {
             map.put(GENERIC_KEY, generic);
             map.put(METHODS_KEY, ANY_VALUE);
         } else {
             String revision = Version.getVersion(interfaceClass, version);
             if (revision != null && revision.length() > 0) {
-                map.put(REVISION_KEY, revision);
+                map.put(REVISION_KEY, revision);// 修订号
             }
 
-            String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();
+            String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();// 获得方法数组
             if (methods.length == 0) {
                 logger.warn("No method found in service interface " + interfaceClass.getName());
                 map.put(METHODS_KEY, ANY_VALUE);
@@ -431,6 +435,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
         /**
          * Here the token value configured by the provider is used to assign the value to ServiceConfig#token
+         * // token ，参见《令牌校验》http://dubbo.apache.org/zh-cn/docs/user/demos/token-authorization.html
          */
         if(ConfigUtils.isEmpty(token) && provider != null) {
             token = provider.getToken();
@@ -449,9 +454,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // export service
         String host = findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = findConfigedPorts(protocolConfig, name, map);
+        //创建 协议 url
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
 
         // You can customize Configurator to append extra parameters
+        // 配置规则，参见《配置规则》http://dubbo.apache.org/zh-cn/docs/user/demos/config-rule.html
         if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
                 .hasExtension(url.getProtocol())) {
             url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
@@ -554,6 +561,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      * Configuration priority: environment variables -> java system properties -> host property in config file ->
      * /etc/hosts -> default network address -> first available network address
      *
+     * 获取协议host地址
+     *
      * @param protocolConfig
      * @param registryURLs
      * @param map
@@ -564,7 +573,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                                      Map<String, String> map) {
         boolean anyhost = false;
 
-        String hostToBind = getValueFromConfig(protocolConfig, DUBBO_IP_TO_BIND);
+        String hostToBind = getValueFromConfig(protocolConfig, DUBBO_IP_TO_BIND);//从启动参数和系统环境变量读取主机名
         if (hostToBind != null && hostToBind.length() > 0 && isInvalidLocalHost(hostToBind)) {
             throw new IllegalArgumentException("Specified invalid bind ip from property:" + DUBBO_IP_TO_BIND + ", value:" + hostToBind);
         }
@@ -579,7 +588,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 anyhost = true;
                 try {
                     logger.info("No valid ip found from environment, try to find valid host from DNS.");
-                    hostToBind = InetAddress.getLocalHost().getHostAddress();
+                    hostToBind = InetAddress.getLocalHost().getHostAddress();//读取本地主机地址
                 } catch (UnknownHostException e) {
                     logger.warn(e.getMessage(), e);
                 }
@@ -629,6 +638,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      * Configuration priority: environment variable -> java system properties -> port property in protocol config file
      * -> protocol default port
      *
+     * 获取协议端口
+     *
      * @param protocolConfig
      * @param name
      * @return
@@ -639,7 +650,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         Integer portToBind = null;
 
         // parse bind port from environment
-        String port = getValueFromConfig(protocolConfig, DUBBO_PORT_TO_BIND);
+        String port = getValueFromConfig(protocolConfig, DUBBO_PORT_TO_BIND);//从启动参数和系统环境变量读取协议端口
         portToBind = parsePort(port);
 
         // if there's no bind port found from environment, keep looking up.
@@ -648,6 +659,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             if (provider != null && (portToBind == null || portToBind == 0)) {
                 portToBind = provider.getPort();
             }
+            //Protocol.class 默认是 DubboProtocol 默认协议端口20880
             final int defaultPort = ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(name).getDefaultPort();
             if (portToBind == null || portToBind == 0) {
                 portToBind = defaultPort;
@@ -673,7 +685,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
         return portToRegistry;
     }
-
+    // String -》 Integer
     private Integer parsePort(String configPort) {
         Integer port = null;
         if (configPort != null && configPort.length() > 0) {

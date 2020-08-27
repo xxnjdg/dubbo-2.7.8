@@ -181,13 +181,13 @@ public class DubboBootstrap extends GenericEventListener {
     private List<CompletableFuture<Object>> asyncReferringFutures = new ArrayList<>();
 
     /**
-     * See {@link ApplicationModel} and {@link ExtensionLoader} for why DubboBootstrap is designed to be singleton.
+     * See {@link ApplicationModel} and {@link ExtensionLoader} for why DubboBootstrap is designed to be singleton. 单例生成方法
      */
     public static DubboBootstrap getInstance() {
         if (instance == null) {
             synchronized (DubboBootstrap.class) {
                 if (instance == null) {
-                    instance = new DubboBootstrap();
+                    instance = new DubboBootstrap();//实例化对象
                 }
             }
         }
@@ -195,9 +195,12 @@ public class DubboBootstrap extends GenericEventListener {
     }
 
     private DubboBootstrap() {
+        //"environment" -> {Class@1732} "class org.apache.dubbo.common.config.Environment"
+        //"config" -> {Class@1731} "class org.apache.dubbo.config.context.ConfigManager"
         configManager = ApplicationModel.getConfigManager();
         environment = ApplicationModel.getEnvironment();
 
+        //注册关闭钩子
         DubboShutdownHook.getDubboShutdownHook().register();
         ShutdownHookCallbacks.INSTANCE.addCallback(new ShutdownHookCallback() {
             @Override
@@ -515,7 +518,7 @@ public class DubboBootstrap extends GenericEventListener {
         if (!initialized.compareAndSet(false, true)) {
             return;
         }
-
+        //调用 FrameworkExts initialize 方法
         ApplicationModel.initFrameworkExts();
 
         startConfigCenter();
@@ -597,20 +600,20 @@ public class DubboBootstrap extends GenericEventListener {
     }
 
     private void startConfigCenter() {
-
+        //设置配置中心，如果可以使用注册中心作为配置中心
         useRegistryAsConfigCenterIfNecessary();
 
         Collection<ConfigCenterConfig> configCenters = configManager.getConfigCenters();
 
-        // check Config Center
-        if (CollectionUtils.isEmpty(configCenters)) {
+        // check Config Center 是否存在配置中心
+        if (CollectionUtils.isEmpty(configCenters)) {//未配置
             ConfigCenterConfig configCenterConfig = new ConfigCenterConfig();
             configCenterConfig.refresh();
-            if (configCenterConfig.isValid()) {
+            if (configCenterConfig.isValid()) {//address未设置，即无效
                 configManager.addConfigCenter(configCenterConfig);
                 configCenters = configManager.getConfigCenters();
             }
-        } else {
+        } else {//配置
             for (ConfigCenterConfig configCenterConfig : configCenters) {
                 configCenterConfig.refresh();
                 ConfigValidationUtils.validateConfigCenterConfig(configCenterConfig);
@@ -729,7 +732,7 @@ public class DubboBootstrap extends GenericEventListener {
     }
 
     /**
-     * Is used the specified registry as a center infrastructure
+     * Is used the specified registry as a center infrastructure 是否使用注册中心作为配置中心
      *
      * @param registryConfig       the {@link RegistryConfig}
      * @param usedRegistryAsCenter the configured value on

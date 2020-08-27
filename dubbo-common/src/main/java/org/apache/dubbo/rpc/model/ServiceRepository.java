@@ -38,13 +38,13 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
     public static final String NAME = "repository";
 
     // services
-    private ConcurrentMap<String, ServiceDescriptor> services = new ConcurrentHashMap<>();
+    private ConcurrentMap<String, ServiceDescriptor> services = new ConcurrentHashMap<>();//key = 服务接口名字 ServiceDescriptor
 
     // consumers
     private ConcurrentMap<String, ConsumerModel> consumers = new ConcurrentHashMap<>();
 
     // providers
-    private ConcurrentMap<String, ProviderModel> providers = new ConcurrentHashMap<>();
+    private ConcurrentMap<String, ProviderModel> providers = new ConcurrentHashMap<>();//服务接口名字  ProviderModel
 
     // useful to find a provider model quickly with serviceInterfaceName:version
     private ConcurrentMap<String, ProviderModel> providersWithoutGroup = new ConcurrentHashMap<>();
@@ -58,7 +58,7 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
             }
         }
     }
-
+    //interfaceClazz = 服务接口 注册服务接口
     public ServiceDescriptor registerService(Class<?> interfaceClazz) {
         return services.computeIfAbsent(interfaceClazz.getName(),
                 _k -> new ServiceDescriptor(interfaceClazz));
@@ -110,7 +110,7 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
         consumers.remove(serviceKey);
 
     }
-
+    //注册服务接口的提供者
     public void registerProvider(String serviceKey,
                                  Object serviceInstance,
                                  ServiceDescriptor serviceModel,
