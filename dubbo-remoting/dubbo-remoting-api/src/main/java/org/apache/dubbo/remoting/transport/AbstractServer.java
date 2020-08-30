@@ -42,32 +42,43 @@ import static org.apache.dubbo.remoting.Constants.IDLE_TIMEOUT_KEY;
 
 /**
  * AbstractServer
+ *
+ * 服务器抽象类，重点实现了公用的逻辑，同时抽象了开启、关闭等模板方法，供子类实现。
  */
 public abstract class AbstractServer extends AbstractEndpoint implements RemotingServer {
 
     protected static final String SERVER_THREAD_POOL_NAME = "DubboServerHandler";
     private static final Logger logger = LoggerFactory.getLogger(AbstractServer.class);
+    //线程池
     ExecutorService executor;
+    //服务地址
     private InetSocketAddress localAddress;
+    //绑定地址
     private InetSocketAddress bindAddress;
+    //服务器最大可接受连接数
     private int accepts;
+    //空闲超时时间，单位：毫秒
     private int idleTimeout;
 
     private ExecutorRepository executorRepository = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
 
     public AbstractServer(URL url, ChannelHandler handler) throws RemotingException {
         super(url, handler);
+        // 服务地址
         localAddress = getUrl().toInetSocketAddress();
-
+        // 绑定地址
         String bindIp = getUrl().getParameter(Constants.BIND_IP_KEY, getUrl().getHost());
         int bindPort = getUrl().getParameter(Constants.BIND_PORT_KEY, getUrl().getPort());
         if (url.getParameter(ANYHOST_KEY, false) || NetUtils.isInvalidLocalHost(bindIp)) {
             bindIp = ANYHOST_VALUE;
         }
         bindAddress = new InetSocketAddress(bindIp, bindPort);
+        // 服务器最大可接受连接数
         this.accepts = url.getParameter(ACCEPTS_KEY, DEFAULT_ACCEPTS);
+        // 空闲超时时间
         this.idleTimeout = url.getParameter(IDLE_TIMEOUT_KEY, DEFAULT_IDLE_TIMEOUT);
         try {
+            // 开启服务器
             doOpen();
             if (logger.isInfoEnabled()) {
                 logger.info("Start " + getClass().getSimpleName() + " bind " + getBindAddress() + ", export " + getLocalAddress());
@@ -76,6 +87,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
             throw new RemotingException(url.toInetSocketAddress(), null, "Failed to bind " + getClass().getSimpleName()
                     + " on " + getLocalAddress() + ", cause: " + t.getMessage(), t);
         }
+        // 获得线程池
         executor = executorRepository.createExecutorIfAbsent(url);
     }
 
@@ -114,7 +126,9 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
 
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
+        // 获得所有的客户端的通道
         Collection<Channel> channels = getChannels();
+        // 群发消息
         for (Channel channel : channels) {
             if (channel.isConnected()) {
                 channel.send(message, sent);
@@ -172,12 +186,14 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
             return;
         }
 
+        // 超过上限，关闭新的链接
         Collection<Channel> channels = getChannels();
         if (accepts > 0 && channels.size() > accepts) {
             logger.error("Close channel " + ch + ", cause: The server " + ch.getLocalAddress() + " connections greater than max config " + accepts);
-            ch.close();
+            ch.close();// 关闭新的链接
             return;
         }
+        // 连接
         super.connected(ch);
     }
 

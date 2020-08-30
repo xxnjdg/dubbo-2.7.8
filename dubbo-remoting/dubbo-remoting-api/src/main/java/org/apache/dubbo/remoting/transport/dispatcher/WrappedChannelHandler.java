@@ -30,14 +30,14 @@ import org.apache.dubbo.remoting.exchange.support.DefaultFuture;
 import org.apache.dubbo.remoting.transport.ChannelHandlerDelegate;
 
 import java.util.concurrent.ExecutorService;
-
+//包装的 WrappedChannelHandler 实现类。
 public class WrappedChannelHandler implements ChannelHandlerDelegate {
 
     protected static final Logger logger = LoggerFactory.getLogger(WrappedChannelHandler.class);
 
-    protected final ChannelHandler handler;
+    protected final ChannelHandler handler;//通道处理器
 
-    protected final URL url;
+    protected final URL url;//URL
 
     public WrappedChannelHandler(ChannelHandler handler, URL url) {
         this.handler = handler;

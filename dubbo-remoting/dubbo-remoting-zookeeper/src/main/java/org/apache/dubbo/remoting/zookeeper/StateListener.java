@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 package org.apache.dubbo.remoting.zookeeper;
-
+//状态监听器接口
 public interface StateListener {
 
     int SESSION_LOST = 0;
@@ -28,6 +28,6 @@ public interface StateListener {
 
     int NEW_SESSION_CREATED = 4;
 
-    void stateChanged(int connected);
+    void stateChanged(int connected);//状态变更回调
 
 }

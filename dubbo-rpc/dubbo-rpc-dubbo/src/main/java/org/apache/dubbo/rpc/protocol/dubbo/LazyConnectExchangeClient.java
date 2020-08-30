@@ -40,6 +40,8 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.DEFAULT_LAZY_CONNECT
 
 /**
  * dubbo protocol support class.
+ *
+ * 支持懒连接服务器的信息交换客户端实现类
  */
 @SuppressWarnings("deprecation")
 final class LazyConnectExchangeClient implements ExchangeClient {

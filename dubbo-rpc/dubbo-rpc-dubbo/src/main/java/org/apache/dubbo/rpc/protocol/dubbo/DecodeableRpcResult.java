@@ -37,22 +37,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
-
+//可解码的 RpcResult 实现类。
+//当服务提供者者，返回服务消费者调用结果，前者编码的 RpcResult 对象，后者解码成 DecodeableRpcResult 对象
 public class DecodeableRpcResult extends AppResponse implements Codec, Decodeable {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeableRpcResult.class);
 
-    private Channel channel;
+    private Channel channel;//通道
 
-    private byte serializationType;
+    private byte serializationType;//Serialization 类型编号
 
-    private InputStream inputStream;
+    private InputStream inputStream;//输入流
 
-    private Response response;
+    private Response response;//请求
 
-    private Invocation invocation;
+    private Invocation invocation;//Invocation 对象
 
-    private volatile boolean hasDecoded;
+    private volatile boolean hasDecoded;//是否已经解码完成
 
     public DecodeableRpcResult(Channel channel, Response response, InputStream is, Invocation invocation, byte id) {
         Assert.notNull(channel, "channel == null");
@@ -80,11 +81,12 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
         ObjectInput in = CodecSupport.getSerialization(channel.getUrl(), serializationType)
                 .deserialize(channel.getUrl(), input);
 
+        // 读取标记位
         byte flag = in.readByte();
         switch (flag) {
-            case DubboCodec.RESPONSE_NULL_VALUE:
+            case DubboCodec.RESPONSE_NULL_VALUE:// 无返回值
                 break;
-            case DubboCodec.RESPONSE_VALUE:
+            case DubboCodec.RESPONSE_VALUE: // 有返回值
                 handleValue(in);
                 break;
             case DubboCodec.RESPONSE_WITH_EXCEPTION:

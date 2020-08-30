@@ -42,6 +42,8 @@ import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
  * AbstractRegistryFactory. (SPI, Singleton, ThreadSafe)
  *
  * @see org.apache.dubbo.registry.RegistryFactory
+ *
+ * 实现 RegistryFactory 接口，RegistryFactory 抽象类，实现了 Registry 的容器管理
  */
 public abstract class AbstractRegistryFactory implements RegistryFactory {
 
@@ -51,7 +53,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
     // The lock for the acquisition process of the registry
     protected static final ReentrantLock LOCK = new ReentrantLock();
 
-    // Registry Collection Map<RegistryAddress, Registry>
+    // Registry Collection Map<RegistryAddress, Registry> Registry 集合
     protected static final Map<String, Registry> REGISTRIES = new HashMap<>();
 
     private static final AtomicBoolean destroyed = new AtomicBoolean(false);
@@ -142,6 +144,12 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
         return url.toServiceStringWithoutResolving();
     }
 
+    /**
+     * 创建 Registry 对象
+     *
+     * @param url 注册中心地址
+     * @return Registry 对象
+     */
     protected abstract Registry createRegistry(URL url);
 
 

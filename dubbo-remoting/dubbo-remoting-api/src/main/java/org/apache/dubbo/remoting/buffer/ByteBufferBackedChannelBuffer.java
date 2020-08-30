@@ -21,12 +21,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-
+//基于 java.nio.ByteBuffer 的 Buffer 实现类。
 public class ByteBufferBackedChannelBuffer extends AbstractChannelBuffer {
 
     private final ByteBuffer buffer;
 
-    private final int capacity;
+    private final int capacity;//容量
 
     public ByteBufferBackedChannelBuffer(ByteBuffer buffer) {
         if (buffer == null) {
@@ -43,7 +43,7 @@ public class ByteBufferBackedChannelBuffer extends AbstractChannelBuffer {
         capacity = buffer.capacity;
         setIndex(buffer.readerIndex(), buffer.writerIndex());
     }
-
+    //对应的工厂是 DirectChannelBufferFactory 或 HeapChannelBufferFactory 。
     @Override
     public ChannelBufferFactory factory() {
         if (buffer.isDirect()) {

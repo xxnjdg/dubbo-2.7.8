@@ -48,20 +48,21 @@ import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.PATH_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 import static org.apache.dubbo.rpc.protocol.dubbo.CallbackServiceCodec.decodeInvocationArgument;
-
+//可解码的 RpcInvocation 实现类
+// 当服务消费者，调用服务提供者，前者编码的 RpcInvocation 对象，后者解码成 DecodeableRpcInvocation 对象
 public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Decodeable {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeableRpcInvocation.class);
 
-    private Channel channel;
+    private Channel channel;//通道
 
-    private byte serializationType;
+    private byte serializationType;//Serialization 类型编号
 
-    private InputStream inputStream;
+    private InputStream inputStream;//输入流
 
-    private Request request;
+    private Request request;// 请求
 
-    private volatile boolean hasDecoded;
+    private volatile boolean hasDecoded;//是否已经解码完成
 
     public DecodeableRpcInvocation(Channel channel, Request request, InputStream is, byte id) {
         Assert.notNull(channel, "channel == null");
@@ -102,12 +103,13 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
 
         String dubboVersion = in.readUTF();
         request.setVersion(dubboVersion);
+        // 解码 `dubbo` `path` `version`
         setAttachment(DUBBO_VERSION_KEY, dubboVersion);
 
         String path = in.readUTF();
         setAttachment(PATH_KEY, path);
         setAttachment(VERSION_KEY, in.readUTF());
-
+        // 解码方法、方法签名、方法参数集合
         setMethodName(in.readUTF());
 
         String desc = in.readUTF();
@@ -161,6 +163,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
             }
 
             //decode argument ,may be callback
+            // 进一步解码方法参数，主要为了参数返回
             for (int i = 0; i < args.length; i++) {
                 args[i] = decodeInvocationArgument(channel, this, pts, i, args[i]);
             }

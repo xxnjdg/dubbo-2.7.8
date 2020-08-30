@@ -21,16 +21,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-
+//通道 Buffer 抽象类
 public abstract class AbstractChannelBuffer implements ChannelBuffer {
 
-    private int readerIndex;
+    private int readerIndex;//读取位置
 
-    private int writerIndex;
+    private int writerIndex;//写入位置
 
-    private int markedReaderIndex;
+    private int markedReaderIndex;//标记的读取位置
 
-    private int markedWriterIndex;
+    private int markedWriterIndex;//标记的写入位置
 
     @Override
     public int readerIndex() {

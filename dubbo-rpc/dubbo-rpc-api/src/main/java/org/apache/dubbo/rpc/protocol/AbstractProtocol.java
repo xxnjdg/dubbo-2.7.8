@@ -46,10 +46,20 @@ public abstract class AbstractProtocol implements Protocol {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    /**
+     * Exporter 集合
+     *
+     * key: 服务键 {@link #serviceKey(URL)} 或 {@link URL#getServiceKey()} 。
+     *      不同协议会不同
+     */
     protected final Map<String, Exporter<?>> exporterMap = new ConcurrentHashMap<String, Exporter<?>>();
 
     /**
      * <host:port, ProtocolServer>
+     *
+     * 通信服务器集合
+     *
+     * key: 服务器地址。格式为：host:port
      */
     protected final Map<String, ProtocolServer> serverMap = new ConcurrentHashMap<>();
 

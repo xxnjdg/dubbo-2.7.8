@@ -23,8 +23,8 @@ import java.io.InputStream;
 public class ChannelBufferInputStream extends InputStream {
 
     private final ChannelBuffer buffer;
-    private final int startIndex;
-    private final int endIndex;
+    private final int startIndex;//开始位置
+    private final int endIndex;//结束位置
 
     public ChannelBufferInputStream(ChannelBuffer buffer) {
         this(buffer, buffer.readableBytes());

@@ -23,13 +23,15 @@ import java.net.InetSocketAddress;
  *
  * @export
  * @see org.apache.dubbo.remoting.exchange.support.DefaultFuture#get()
+ *
+ * 实现 RemotingException 类，超时异常
  */
 public class TimeoutException extends RemotingException {
 
-    public static final int CLIENT_SIDE = 0;
-    public static final int SERVER_SIDE = 1;
+    public static final int CLIENT_SIDE = 0;//客户端
+    public static final int SERVER_SIDE = 1;//服务端
     private static final long serialVersionUID = 3122966731958222692L;
-    private final int phase;
+    private final int phase;//阶段
 
     public TimeoutException(boolean serverSide, Channel channel, String message) {
         super(channel, message);

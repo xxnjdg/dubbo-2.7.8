@@ -39,7 +39,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.PATH_SEPARATOR;
 
 public class CacheListener implements DataListener {
     private static final int MIN_PATH_DEPTH = 5;
-
+    //  /dubbo/config/dubbo/dubbo-demo-api-consumer.configurators  value = ConsumerConfigurationListener
     private Map<String, Set<ConfigurationListener>> keyListeners = new ConcurrentHashMap<>();
     private CountDownLatch initializedLatch;
     private String rootPath;

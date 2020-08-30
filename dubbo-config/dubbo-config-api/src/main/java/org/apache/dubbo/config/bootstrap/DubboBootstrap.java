@@ -896,11 +896,13 @@ public class DubboBootstrap extends GenericEventListener {
     public DubboBootstrap start() {
         if (started.compareAndSet(false, true)) {
             ready.set(false);
+            //初始化
             initialize();
             if (logger.isInfoEnabled()) {
                 logger.info(NAME + " is starting...");
             }
             // 1. export Dubbo Services
+            //服务提供者暴露服务
             exportServices();
 
             // Not only provider register
@@ -911,6 +913,7 @@ public class DubboBootstrap extends GenericEventListener {
                 registerServiceInstance();
             }
 
+            //服务消费者引用服务
             referServices();
             if (asyncExportingFutures.size() > 0) {
                 new Thread(() -> {
@@ -1126,6 +1129,7 @@ public class DubboBootstrap extends GenericEventListener {
 
     private void referServices() {
         if (cache == null) {
+            //初始化 cache = new ReferenceConfigCache(DEFAULT_NAME, DEFAULT_KEY_GENERATOR)
             cache = ReferenceConfigCache.getCache();
         }
 

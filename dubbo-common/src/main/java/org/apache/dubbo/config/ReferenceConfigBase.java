@@ -59,6 +59,8 @@ public abstract class ReferenceConfigBase<T> extends AbstractReferenceConfig {
 
     /**
      * The url for peer-to-peer invocation
+     *
+     * 直连服务提供者地址
      */
     protected String url;
 
@@ -110,7 +112,7 @@ public abstract class ReferenceConfigBase<T> extends AbstractReferenceConfig {
         }
         return shouldInit;
     }
-
+    //设置 ConsumerConfig
     public void checkDefault() throws IllegalStateException {
         if (consumer == null) {
             consumer = ApplicationModel.getConfigManager()
@@ -222,22 +224,28 @@ public abstract class ReferenceConfigBase<T> extends AbstractReferenceConfig {
     public String getPrefix() {
         return DUBBO + ".reference." + interfaceName;
     }
-
+    //直连提供者
     public void resolveFile() {
+        // 直连提供者，参见文档《直连提供者》http://dubbo.apache.org/zh-cn/docs/user/demos/explicit-target.html
+        // 【直连提供者】第一优先级，通过 -D 参数指定 ，例如 java -Dcom.alibaba.xxx.XxxService=dubbo://localhost:20890
         String resolve = System.getProperty(interfaceName);
         String resolveFile = null;
+        // 【直连提供者】第二优先级，通过文件映射，例如 com.alibaba.xxx.XxxService=dubbo://localhost:20890
         if (StringUtils.isEmpty(resolve)) {
+            //读取 dubbo.resolve.file 属性 获取文件名
             resolveFile = System.getProperty("dubbo.resolve.file");
             if (StringUtils.isEmpty(resolveFile)) {
+                // `${user.home}/dubbo-resolve.properties` 文件 ，无需配置
                 File userResolveFile = new File(new File(System.getProperty("user.home")), "dubbo-resolve.properties");
                 if (userResolveFile.exists()) {
                     resolveFile = userResolveFile.getAbsolutePath();
                 }
             }
+            // 存在 resolveFile ，则进行文件读取加载。
             if (resolveFile != null && resolveFile.length() > 0) {
                 Properties properties = new Properties();
                 try (FileInputStream fis = new FileInputStream(new File(resolveFile))) {
-                    properties.load(fis);
+                    properties.load(fis);//加载属性
                 } catch (IOException e) {
                     throw new IllegalStateException("Failed to load " + resolveFile + ", cause: " + e.getMessage(), e);
                 }

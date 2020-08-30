@@ -16,7 +16,7 @@
  */
 
 package org.apache.dubbo.remoting;
-
+//可解码的接口
 public interface Decodeable {
 
     public void decode() throws Exception;

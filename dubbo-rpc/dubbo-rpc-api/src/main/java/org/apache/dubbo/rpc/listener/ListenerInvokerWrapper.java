@@ -34,9 +34,9 @@ import java.util.List;
 public class ListenerInvokerWrapper<T> implements Invoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(ListenerInvokerWrapper.class);
-
+    //真实的 Invoker 对象
     private final Invoker<T> invoker;
-
+    //Invoker 监听器数组
     private final List<InvokerListener> listeners;
 
     public ListenerInvokerWrapper(Invoker<T> invoker, List<InvokerListener> listeners) {
@@ -46,6 +46,7 @@ public class ListenerInvokerWrapper<T> implements Invoker<T> {
         this.invoker = invoker;
         this.listeners = listeners;
         if (CollectionUtils.isNotEmpty(listeners)) {
+            // 执行监听器
             for (InvokerListener listener : listeners) {
                 if (listener != null) {
                     try {

@@ -28,6 +28,8 @@ import java.util.Collection;
 
 /**
  * ExchangeServerDelegate
+ *
+ * 信息交换服务器装饰者。在每个实现的方法里，直接调用被装饰的 server 属性的方法
  */
 public class ExchangeServerDelegate implements ExchangeServer {
 

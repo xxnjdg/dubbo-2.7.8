@@ -269,7 +269,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                     "(" + interfaceClass.getName() + ")\" in local implementation class " + localClass.getName());
         }
     }
-
+    //默认从ConfigManager获取RegistryConfig，如果没有就创建，并设置到 this.registries
     private void convertRegistryIdsToRegistries() {
         computeValidRegistryIds();
         if (StringUtils.isEmpty(registryIds)) {
@@ -309,8 +309,9 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         }
 
     }
-
+    //分别检测 interfaceConfig module application
     public void completeCompoundConfigs(AbstractInterfaceConfig interfaceConfig) {
+        // 从 interfaceConfig 对象中，读取 application、module、registries、monitor 配置对象。
         if (interfaceConfig != null) {
             if (application == null) {
                 setApplication(interfaceConfig.getApplication());
@@ -325,6 +326,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                 setMonitor(interfaceConfig.getMonitor());
             }
         }
+        // 从 ModuleConfig 对象中，读取 registries、monitor 配置对象。
         if (module != null) {
             if (registries == null) {
                 setRegistries(module.getRegistries());
@@ -333,6 +335,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                 setMonitor(module.getMonitor());
             }
         }
+        // 从 ApplicationConfig 对象中，读取 registries、monitor 配置对象。
         if (application != null) {
             if (registries == null) {
                 setRegistries(application.getRegistries());

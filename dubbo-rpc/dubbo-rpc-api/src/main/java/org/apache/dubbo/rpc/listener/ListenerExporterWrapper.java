@@ -27,14 +27,16 @@ import java.util.List;
 
 /**
  * ListenerExporter
+ *
+ * 实现 Exporter 接口，具有监听器功能的 Exporter 包装器
  */
 public class ListenerExporterWrapper<T> implements Exporter<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(ListenerExporterWrapper.class);
 
-    private final Exporter<T> exporter;
+    private final Exporter<T> exporter;//真实的 Exporter 对象
 
-    private final List<ExporterListener> listeners;
+    private final List<ExporterListener> listeners;//Exporter 监听器数组
 
     public ListenerExporterWrapper(Exporter<T> exporter, List<ExporterListener> listeners) {
         if (exporter == null) {
@@ -42,6 +44,7 @@ public class ListenerExporterWrapper<T> implements Exporter<T> {
         }
         this.exporter = exporter;
         this.listeners = listeners;
+        // 执行监听器
         if (CollectionUtils.isNotEmpty(listeners)) {
             RuntimeException exception = null;
             for (ExporterListener listener : listeners) {

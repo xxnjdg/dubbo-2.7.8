@@ -40,7 +40,7 @@ public abstract class AbstractCodec implements Codec2 {
     private static final String CLIENT_SIDE = "client";
 
     private static final String SERVER_SIDE = "server";
-
+    //校验消息长度
     protected static void checkPayload(Channel channel, long size) throws IOException {
         int payload = Constants.DEFAULT_PAYLOAD;
         if (channel != null && channel.getUrl() != null) {
@@ -53,11 +53,11 @@ public abstract class AbstractCodec implements Codec2 {
             throw e;
         }
     }
-
+    //获得 Serialization 对象
     protected Serialization getSerialization(Channel channel) {
         return CodecSupport.getSerialization(channel.getUrl());
     }
-
+    //是否为客户端侧的通道
     protected boolean isClientSide(Channel channel) {
         String side = (String)channel.getAttribute(SIDE_KEY);
         if (CLIENT_SIDE.equals(side)) {
@@ -76,7 +76,7 @@ public abstract class AbstractCodec implements Codec2 {
             return isClient;
         }
     }
-
+    //是否为服务端侧的通道
     protected boolean isServerSide(Channel channel) {
         return !isClientSide(channel);
     }

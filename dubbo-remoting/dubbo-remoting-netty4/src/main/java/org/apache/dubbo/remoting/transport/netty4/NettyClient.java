@@ -48,6 +48,8 @@ import static org.apache.dubbo.remoting.transport.netty4.NettyEventLoopFactory.s
 
 /**
  * NettyClient.
+ *
+ * Netty 客户端实现类
  */
 public class NettyClient extends AbstractClient {
 
@@ -89,16 +91,20 @@ public class NettyClient extends AbstractClient {
      */
     @Override
     protected void doOpen() throws Throwable {
+        // 创建 NettyClientHandler 对象
         final NettyClientHandler nettyClientHandler = new NettyClientHandler(getUrl(), this);
+        // 实例化 ServerBootstrap
         bootstrap = new Bootstrap();
-        bootstrap.group(NIO_EVENT_LOOP_GROUP)
-                .option(ChannelOption.SO_KEEPALIVE, true)
+        bootstrap.group(NIO_EVENT_LOOP_GROUP)// 设置它的线程组
+                .option(ChannelOption.SO_KEEPALIVE, true)// 设置可选项
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 //.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, getTimeout())
-                .channel(socketChannelClass());
+                .channel(socketChannelClass());// 设置 Channel类型
 
+        // 设置连接超时时间
         bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.max(3000, getConnectTimeout()));
+        // 设置责任链路
         bootstrap.handler(new ChannelInitializer<SocketChannel>() {
 
             @Override
@@ -109,10 +115,11 @@ public class NettyClient extends AbstractClient {
                     ch.pipeline().addLast("negotiation", SslHandlerInitializer.sslClientHandler(getUrl(), nettyClientHandler));
                 }
 
+                // 创建 NettyCodecAdapter 对象
                 NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyClient.this);
                 ch.pipeline()//.addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
-                        .addLast("decoder", adapter.getDecoder())
-                        .addLast("encoder", adapter.getEncoder())
+                        .addLast("decoder", adapter.getDecoder())// 解码
+                        .addLast("encoder", adapter.getEncoder())// 编码
                         .addLast("client-idle-handler", new IdleStateHandler(heartbeatInterval, 0, 0, MILLISECONDS))
                         .addLast("handler", nettyClientHandler);
 
@@ -129,15 +136,19 @@ public class NettyClient extends AbstractClient {
     @Override
     protected void doConnect() throws Throwable {
         long start = System.currentTimeMillis();
+        // 连接服务器
         ChannelFuture future = bootstrap.connect(getConnectAddress());
         try {
+            // 等待连接成功或者超时
             boolean ret = future.awaitUninterruptibly(getConnectTimeout(), MILLISECONDS);
 
+            // 连接成功
             if (ret && future.isSuccess()) {
                 Channel newChannel = future.channel();
                 try {
                     // Close old channel
                     // copy reference
+                    // 关闭老的连接
                     Channel oldChannel = NettyClient.this.channel;
                     if (oldChannel != null) {
                         try {
@@ -150,6 +161,7 @@ public class NettyClient extends AbstractClient {
                         }
                     }
                 } finally {
+                    // 若 NettyClient 被关闭，关闭连接
                     if (NettyClient.this.isClosed()) {
                         try {
                             if (logger.isInfoEnabled()) {
@@ -161,13 +173,16 @@ public class NettyClient extends AbstractClient {
                             NettyChannel.removeChannelIfDisconnected(newChannel);
                         }
                     } else {
+                        // 设置新连接
                         NettyClient.this.channel = newChannel;
                     }
                 }
             } else if (future.cause() != null) {
+                // 发生异常，抛出 RemotingException 异常
                 throw new RemotingException(this, "client(url: " + getUrl() + ") failed to connect to server "
                         + getRemoteAddress() + ", error message is:" + future.cause().getMessage(), future.cause());
             } else {
+                // 无结果（连接超时），抛出 RemotingException 异常
                 throw new RemotingException(this, "client(url: " + getUrl() + ") failed to connect to server "
                         + getRemoteAddress() + " client-side timeout "
                         + getConnectTimeout() + "ms (elapsed: " + (System.currentTimeMillis() - start) + "ms) from netty client "

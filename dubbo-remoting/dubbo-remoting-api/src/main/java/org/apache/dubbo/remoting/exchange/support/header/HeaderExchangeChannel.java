@@ -38,6 +38,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 
 /**
  * ExchangeReceiver
+ *
+ * 基于消息头部( Header )的信息交换通道实现类
  */
 final class HeaderExchangeChannel implements ExchangeChannel {
 
@@ -45,9 +47,9 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     private static final String CHANNEL_KEY = HeaderExchangeChannel.class.getName() + ".CHANNEL";
 
-    private final Channel channel;
+    private final Channel channel;//通道
 
-    private volatile boolean closed = false;
+    private volatile boolean closed = false;// 是否关闭
 
     HeaderExchangeChannel(Channel channel) {
         if (channel == null) {
@@ -55,7 +57,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         }
         this.channel = channel;
     }
-
+    //创建 HeaderExchangeChannel 对象
     static HeaderExchangeChannel getOrAddChannel(Channel ch) {
         if (ch == null) {
             return null;
@@ -63,7 +65,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         HeaderExchangeChannel ret = (HeaderExchangeChannel) ch.getAttribute(CHANNEL_KEY);
         if (ret == null) {
             ret = new HeaderExchangeChannel(ch);
-            if (ch.isConnected()) {
+            if (ch.isConnected()) {// 已连接
                 ch.setAttribute(CHANNEL_KEY, ret);
             }
         }
@@ -125,19 +127,20 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         if (closed) {
             throw new RemotingException(this.getLocalAddress(), null, "Failed to send request " + request + ", cause: The channel " + this + " is closed!");
         }
-        // create request.
+        // create request. 创建请求
         Request req = new Request();
         req.setVersion(Version.getProtocolVersion());
-        req.setTwoWay(true);
+        req.setTwoWay(true);// 需要响应
         req.setData(request);
+        // 创建 DefaultFuture 对象
         DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout, executor);
         try {
-            channel.send(req);
-        } catch (RemotingException e) {
+            channel.send(req);// 发送请求
+        } catch (RemotingException e) {// 发生异常，取消 DefaultFuture
             future.cancel();
             throw e;
         }
-        return future;
+        return future;// 返回 DefaultFuture 对象
     }
 
     @Override

@@ -24,6 +24,7 @@ import org.apache.dubbo.remoting.utils.PayloadDropper;
 
 /**
  * AbstractChannel
+ * 通道抽象类
  */
 public abstract class AbstractChannel extends AbstractPeer implements Channel {
 

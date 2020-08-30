@@ -39,6 +39,8 @@ public class AllChannelHandler extends WrappedChannelHandler {
     public void connected(Channel channel) throws RemotingException {
         ExecutorService executor = getExecutorService();
         try {
+            //创建 ChannelEventRunnable 对象，提交给线程池执行。
+            //传入的状态为 ChannelState.CONNECTED 。不同的实现方法，对应不同的状态。
             executor.execute(new ChannelEventRunnable(channel, handler, ChannelState.CONNECTED));
         } catch (Throwable t) {
             throw new ExecutionException("connect event", channel, getClass() + " error when process connected event .", t);

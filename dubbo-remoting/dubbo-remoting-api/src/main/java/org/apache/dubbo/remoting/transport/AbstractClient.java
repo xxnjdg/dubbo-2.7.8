@@ -41,13 +41,19 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREADPOOL_KEY;
 
 /**
  * AbstractClient
+ *
+ * 客户端抽象类，重点实现了公用的重连逻辑，同时抽象了连接等模板方法，供子类实现
  */
 public abstract class AbstractClient extends AbstractEndpoint implements Client {
 
     protected static final String CLIENT_THREAD_POOL_NAME = "DubboClientHandler";
     private static final Logger logger = LoggerFactory.getLogger(AbstractClient.class);
     private final Lock connectLock = new ReentrantLock();
+    //发送消息时，若断开，是否重连
     private final boolean needReconnect;
+    /**
+     * 线程池
+     */
     protected volatile ExecutorService executor;
     private ExecutorRepository executorRepository = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
 
@@ -56,11 +62,14 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
 
         needReconnect = url.getParameter(Constants.SEND_RECONNECT_KEY, false);
 
+        //初始化线程池
         initExecutor(url);
 
         try {
+            // 初始化客户端
             doOpen();
         } catch (Throwable t) {
+            // 初始化客户端
             close();
             throw new RemotingException(url.toInetSocketAddress(), null,
                     "Failed to start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress()
@@ -68,20 +77,21 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         }
         try {
             // connect.
+            // 连接服务器
             connect();
             if (logger.isInfoEnabled()) {
                 logger.info("Start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress() + " connect to the server " + getRemoteAddress());
             }
         } catch (RemotingException t) {
             if (url.getParameter(Constants.CHECK_KEY, true)) {
-                close();
+                close();// 失败，则关闭
                 throw t;
             } else {
                 logger.warn("Failed to start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress()
                         + " connect to the server " + getRemoteAddress() + " (check == false, ignore and retry later!), cause: " + t.getMessage(), t);
             }
         } catch (Throwable t) {
-            close();
+            close();// 失败，则关闭
             throw new RemotingException(url.toInetSocketAddress(), null,
                     "Failed to start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress()
                             + " connect to the server " + getRemoteAddress() + ", cause: " + t.getMessage(), t);
@@ -94,7 +104,15 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         executor = executorRepository.createExecutorIfAbsent(url);
     }
 
+    /**
+     * 包装通道处理器
+     *
+     * @param url URL
+     * @param handler 被包装的通道处理器
+     * @return 包装后的通道处理器
+     */
     protected static ChannelHandler wrapChannelHandler(URL url, ChannelHandler handler) {
+        // 包装通道处理器
         return ChannelHandlers.wrap(handler, url);
     }
 
@@ -167,9 +185,11 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
 
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
+        // 未连接时，开启重连功能，则先发起连接
         if (needReconnect && !isConnected()) {
             connect();
         }
+        // 发送消息
         Channel channel = getChannel();
         //TODO Can the value returned by getChannel() be null? need improvement.
         if (channel == null || !channel.isConnected()) {
@@ -184,18 +204,22 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
 
         try {
 
+            // 已连接，
             if (isConnected()) {
                 return;
             }
 
+            // 执行连接
             doConnect();
 
+            // 连接失败，抛出异常
             if (!isConnected()) {
                 throw new RemotingException(this, "Failed connect to server " + getRemoteAddress() + " from " + getClass().getSimpleName() + " "
                         + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion()
                         + ", cause: Connect wait timeout: " + getConnectTimeout() + "ms.");
 
             } else {
+                // 连接成功，打印日志
                 if (logger.isInfoEnabled()) {
                     logger.info("Successed connect to server " + getRemoteAddress() + " from " + getClass().getSimpleName() + " "
                             + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion()

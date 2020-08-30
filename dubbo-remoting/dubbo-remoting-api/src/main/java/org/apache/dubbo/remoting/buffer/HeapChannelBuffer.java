@@ -24,11 +24,12 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
-
+//基于字节数组的 Buffer 实现类。
 public class HeapChannelBuffer extends AbstractChannelBuffer {
 
     /**
      * The underlying heap byte array that this buffer is wrapping.
+     * 字节数组
      */
     protected final byte[] array;
 
@@ -205,7 +206,7 @@ public class HeapChannelBuffer extends AbstractChannelBuffer {
         System.arraycopy(array, index, copiedArray, 0, length);
         return new HeapChannelBuffer(copiedArray);
     }
-
+    //对应的工厂是 HeapChannelBufferFactory 。
     @Override
     public ChannelBufferFactory factory() {
         return HeapChannelBufferFactory.getInstance();

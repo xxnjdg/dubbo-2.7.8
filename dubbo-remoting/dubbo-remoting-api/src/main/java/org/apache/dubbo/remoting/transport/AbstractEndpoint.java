@@ -37,11 +37,11 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractEndpoint.class);
 
-    private Codec2 codec;
+    private Codec2 codec;//编解码器
 
-    private int timeout;
+    private int timeout;//超时时间
 
-    private int connectTimeout;
+    private int connectTimeout;//连接超时时间
 
     public AbstractEndpoint(URL url, ChannelHandler handler) {
         super(url, handler);
@@ -49,17 +49,17 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
         this.timeout = url.getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
         this.connectTimeout = url.getPositiveParameter(Constants.CONNECT_TIMEOUT_KEY, Constants.DEFAULT_CONNECT_TIMEOUT);
     }
-
+    //基于 url 参数，加载对应的 Codec 实现对象
     protected static Codec2 getChannelCodec(URL url) {
         String codecName = url.getParameter(Constants.CODEC_KEY, "telnet");
-        if (ExtensionLoader.getExtensionLoader(Codec2.class).hasExtension(codecName)) {
+        if (ExtensionLoader.getExtensionLoader(Codec2.class).hasExtension(codecName)) {// 例如，在 DubboProtocol 中，会获得 DubboCodec
             return ExtensionLoader.getExtensionLoader(Codec2.class).getExtension(codecName);
         } else {
             return new CodecAdapter(ExtensionLoader.getExtensionLoader(Codec.class)
                     .getExtension(codecName));
         }
     }
-
+    //使用新的 url 属性，可重置 codec timeout connectTimeout 属性
     @Override
     public void reset(URL url) {
         if (isClosed()) {

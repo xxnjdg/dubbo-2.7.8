@@ -32,17 +32,19 @@ import java.util.List;
 
 /**
  * NettyCodecAdapter.
+ *
+ * Netty 编解码适配器，将 Dubbo 编解码器 适配成 Netty4 的编码器和解码器。
  */
 final public class NettyCodecAdapter {
-
+    //Netty 编码器
     private final ChannelHandler encoder = new InternalEncoder();
-
+    // Netty 解码器
     private final ChannelHandler decoder = new InternalDecoder();
-
+    //Dubbo 编解码器
     private final Codec2 codec;
-
+    //Dubbo URL
     private final URL url;
-
+    //Dubbo ChannelHandler
     private final org.apache.dubbo.remoting.ChannelHandler handler;
 
     public NettyCodecAdapter(Codec2 codec, URL url, org.apache.dubbo.remoting.ChannelHandler handler) {
@@ -63,9 +65,12 @@ final public class NettyCodecAdapter {
 
         @Override
         protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
+            // 创建 NettyBackedChannelBuffer 对象
             org.apache.dubbo.remoting.buffer.ChannelBuffer buffer = new NettyBackedChannelBuffer(out);
+            // 获得 NettyChannel 对象
             Channel ch = ctx.channel();
             NettyChannel channel = NettyChannel.getOrAddChannel(ch, url, handler);
+            // 编码
             codec.encode(channel, buffer, msg);
         }
     }
@@ -75,19 +80,25 @@ final public class NettyCodecAdapter {
         @Override
         protected void decode(ChannelHandlerContext ctx, ByteBuf input, List<Object> out) throws Exception {
 
+            // 创建 NettyBackedChannelBuffer 对象
             ChannelBuffer message = new NettyBackedChannelBuffer(input);
 
+            // 获得 NettyChannel 对象
             NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
 
             // decode object.
             do {
+                // 记录当前读进度
                 int saveReaderIndex = message.readerIndex();
+                // 解码
                 Object msg = codec.decode(channel, message);
+                // 需要更多输入，即消息不完整，标记回原有读进度，并结束
                 if (msg == Codec2.DecodeResult.NEED_MORE_INPUT) {
                     message.readerIndex(saveReaderIndex);
                     break;
                 } else {
                     //is it possible to go here ?
+                    // 解码到消息，添加到 `out`
                     if (saveReaderIndex == message.readerIndex()) {
                         throw new IOException("Decode without read data.");
                     }

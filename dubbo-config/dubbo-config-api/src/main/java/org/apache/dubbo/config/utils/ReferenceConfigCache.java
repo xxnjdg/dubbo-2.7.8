@@ -43,6 +43,8 @@ public class ReferenceConfigCache {
      * Create the key with the <b>Group</b>, <b>Interface</b> and <b>version</b> attribute of {@link ReferenceConfigBase}.
      * <p>
      * key example: <code>group1/org.apache.dubbo.foo.FooService:1.0.0</code>.
+     *
+     * 使用 ReferenceConfig 配置里 <b>Group</b>, <b>Interface</b> and <b>version</b> 的属性生成key
      */
     public static final KeyGenerator DEFAULT_KEY_GENERATOR = referenceConfig -> {
         String iName = referenceConfig.getInterface();
@@ -70,7 +72,7 @@ public class ReferenceConfigCache {
     private final KeyGenerator generator;
 
     private final ConcurrentMap<String, ReferenceConfigBase<?>> referredReferences = new ConcurrentHashMap<>();
-
+    //key = 服务接口类 value = map { key = DEFAULT_KEY_GENERATOR 生成的key value =  }
     private final ConcurrentMap<Class<?>, ConcurrentMap<String, Object>> proxies = new ConcurrentHashMap<>();
 
     private ReferenceConfigCache(String name, KeyGenerator generator) {

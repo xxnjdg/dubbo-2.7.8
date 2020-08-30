@@ -42,11 +42,15 @@ public class NettyServerHandler extends ChannelDuplexHandler {
     /**
      * the cache for alive worker channel.
      * <ip:port, dubbo channel>
+     *
+     *     Dubbo Channel 集合
      */
     private final Map<String, Channel> channels = new ConcurrentHashMap<String, Channel>();
 
+    //URL
     private final URL url;
 
+    //Dubbo ChannelHandler
     private final ChannelHandler handler;
 
     public NettyServerHandler(URL url, ChannelHandler handler) {
@@ -66,10 +70,13 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        // 创建 NettyChannel 对象
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
+        // 添加到 `channels` 中
         if (channel != null) {
             channels.put(NetUtils.toAddressString((InetSocketAddress) ctx.channel().remoteAddress()), channel);
         }
+        // 提交给 `handler` 处理器。
         handler.connected(channel);
 
         if (logger.isInfoEnabled()) {
