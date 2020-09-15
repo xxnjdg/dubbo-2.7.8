@@ -36,12 +36,14 @@ import static org.apache.dubbo.rpc.Constants.DEPRECATED_KEY;
  * is deprecated or not it looks for <b>deprecated</b> attribute value and consider it is deprecated it value is <b>true</b>
  *
  * @see Filter
+ *
+ * 废弃调用的过滤器实现类。当调用废弃的服务方法时，打印错误日志提醒
  */
 @Activate(group = CommonConstants.CONSUMER, value = DEPRECATED_KEY)
 public class DeprecatedFilter implements Filter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeprecatedFilter.class);
-
+    //已经打印日志的方法集合
     private static final Set<String> LOGGED = new ConcurrentHashSet<String>();
 
     @Override
@@ -49,6 +51,7 @@ public class DeprecatedFilter implements Filter {
         String key = invoker.getInterface().getName() + "." + invocation.getMethodName();
         if (!LOGGED.contains(key)) {
             LOGGED.add(key);
+            // 打印告警日志
             if (invoker.getUrl().getMethodParameter(invocation.getMethodName(), DEPRECATED_KEY, false)) {
                 LOGGER.error("The service method " + invoker.getInterface().getName() + "." + getMethodSignature(invocation) + " is DEPRECATED! Declare from " + invoker.getUrl());
             }

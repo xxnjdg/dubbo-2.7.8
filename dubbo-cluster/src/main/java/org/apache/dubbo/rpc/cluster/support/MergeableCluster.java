@@ -19,7 +19,7 @@ package org.apache.dubbo.rpc.cluster.support;
 import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.cluster.Directory;
 import org.apache.dubbo.rpc.cluster.support.wrapper.AbstractCluster;
-
+//分组聚合 Cluster 实现类
 public class MergeableCluster extends AbstractCluster {
 
     public static final String NAME = "mergeable";

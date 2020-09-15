@@ -45,12 +45,14 @@ import static org.apache.dubbo.rpc.cluster.Constants.FAIL_BACK_TASKS_KEY;
  * Especially useful for services of notification.
  *
  * <a href="http://en.wikipedia.org/wiki/Failback">Failback</a>
+ *
+ * FailbackCluster Invoker 实现类。
  */
 public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(FailbackClusterInvoker.class);
 
-    private static final long RETRY_FAILED_PERIOD = 5;
+    private static final long RETRY_FAILED_PERIOD = 5;//重试频率
 
     private final int retries;
 
@@ -74,6 +76,7 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
     }
 
     private void addFailed(LoadBalance loadbalance, Invocation invocation, List<Invoker<T>> invokers, Invoker<T> lastInvoker) {
+        // 若定时任务未初始化，进行创建
         if (failTimer == null) {
             synchronized (this) {
                 if (failTimer == null) {
@@ -96,12 +99,16 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
     protected Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
         Invoker<T> invoker = null;
         try {
+            // 检查 invokers 即可用Invoker集合是否为空，如果为空，那么抛出异常
             checkInvokers(invokers, invocation);
+            // 根据负载均衡机制从 invokers 中选择一个Invoker
             invoker = select(loadbalance, invocation, invokers, null);
+            // RPC 调用得到 Result
             return invoker.invoke(invocation);
         } catch (Throwable e) {
             logger.error("Failback to invoke method " + invocation.getMethodName() + ", wait for retry in background. Ignored exception: "
                     + e.getMessage() + ", ", e);
+            // 添加到失败任务
             addFailed(loadbalance, invocation, invokers, invoker);
             return AsyncRpcResult.newDefaultAsyncResult(null, null, invocation); // ignore
         }
@@ -141,6 +148,7 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
             try {
                 Invoker<T> retryInvoker = select(loadbalance, invocation, invokers, Collections.singletonList(lastInvoker));
                 lastInvoker = retryInvoker;
+                // RPC 调用得到 Result
                 retryInvoker.invoke(invocation);
             } catch (Throwable e) {
                 logger.error("Failed retry to invoke method " + invocation.getMethodName() + ", waiting again.", e);

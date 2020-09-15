@@ -26,11 +26,15 @@ import org.apache.dubbo.rpc.Invocation;
  *     e.g. if tps for a method m1 is 5 for a minute then if 6th call is made within the span of 1 minute then 6th
  *     should not be allowed <b>isAllowable</b> will return false.
  * </pre>
+ *
+ * TPS 限制器接口
  */
 public interface TPSLimiter {
 
     /**
      * judge if the current invocation is allowed by TPS rule
+     *
+     * 根据 tps 限流规则判断是否限制此次调用.
      *
      * @param url        url
      * @param invocation invocation

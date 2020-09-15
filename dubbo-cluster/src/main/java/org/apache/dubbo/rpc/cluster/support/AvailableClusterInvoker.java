@@ -28,6 +28,7 @@ import java.util.List;
 /**
  * AvailableCluster
  *
+ * AvailableCluster Invoker 实现类
  */
 public class AvailableClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
@@ -37,8 +38,10 @@ public class AvailableClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     @Override
     public Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
+        // 循环候选的 Invoker 集合，调用首个可用的 Invoker 对象。
         for (Invoker<T> invoker : invokers) {
             if (invoker.isAvailable()) {
+                // 发起 RPC 调用
                 return invoker.invoke(invocation);
             }
         }

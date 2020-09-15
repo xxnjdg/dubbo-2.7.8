@@ -34,6 +34,8 @@ import static org.apache.dubbo.rpc.cluster.Constants.PRIORITY_KEY;
 /**
  * Configurator. (SPI, Prototype, ThreadSafe)
  *
+ * 配置规则接口
+ *
  */
 public interface Configurator extends Comparable<Configurator> {
 
@@ -46,6 +48,8 @@ public interface Configurator extends Comparable<Configurator> {
 
     /**
      * Configure the provider url.
+     *
+     * 配置到 URL 中
      *
      * @param url - old provider url.
      * @return new provider url.
@@ -68,8 +72,17 @@ public interface Configurator extends Comparable<Configurator> {
      *
      * @param urls URL list to convert
      * @return converted configurator list
+     *
+     * 将overrideURL 转换为 map，供重新 refer 时使用.
+     *  * 每次下发全部规则，全部重新组装计算
+     *
+     *  </br>1.override://0.0.0.0/...(或override://ip:port...?anyhost=true)&para1=value1...表示全局规则(对所有的提供者全部生效)
+     *  *             </br>2.override://ip:port...?anyhost=false 特例规则（只针对某个提供者生效）
+     *  *             </br>3.不支持override://规则... 需要注册中心自行计算.
+     *  *             </br>4.不带参数的override://0.0.0.0/ 表示清除override
      */
     static Optional<List<Configurator>> toConfigurators(List<URL> urls) {
+        // 忽略，若配置规则 URL 集合为空
         if (CollectionUtils.isEmpty(urls)) {
             return Optional.empty();
         }
@@ -77,18 +90,23 @@ public interface Configurator extends Comparable<Configurator> {
         ConfiguratorFactory configuratorFactory = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
                 .getAdaptiveExtension();
 
+        // 创建 Configurator 集合
         List<Configurator> configurators = new ArrayList<>(urls.size());
         for (URL url : urls) {
+            // 若协议为 `empty://` ，意味着清空所有配置规则，因此返回空 Configurator 集合
             if (EMPTY_PROTOCOL.equals(url.getProtocol())) {
                 configurators.clear();
                 break;
             }
+            // 对应第 4 条契约，不带参数的 override://0.0.0.0/ 表示清除 override
             Map<String, String> override = new HashMap<>(url.getParameters());
             //The anyhost parameter of override may be added automatically, it can't change the judgement of changing url
+            // override 上的 anyhost 可能是自动添加的，不能影响改变url判断
             override.remove(ANYHOST_KEY);
             if (CollectionUtils.isEmptyMap(override)) {
                 continue;
             }
+            // 获得 Configurator 对象，并添加到 `configurators` 中
             configurators.add(configuratorFactory.getConfigurator(url));
         }
         Collections.sort(configurators);

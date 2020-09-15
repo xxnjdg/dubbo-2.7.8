@@ -54,6 +54,8 @@ import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
  * current execution thread.
  *
  * @see RpcContext
+ *
+ * 服务提供者的 ContextFilter 实现类
  */
 @Activate(group = PROVIDER, order = -10000)
 public class ContextFilter implements Filter, Filter.Listener {
@@ -81,11 +83,13 @@ public class ContextFilter implements Filter, Filter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 创建新的 `attachments` 集合，清理公用的隐式参数
         Map<String, Object> attachments = invocation.getObjectAttachments();
         if (attachments != null) {
             Map<String, Object> newAttach = new HashMap<>(attachments.size());
             for (Map.Entry<String, Object> entry : attachments.entrySet()) {
                 String key = entry.getKey();
+                //从attachments移除UNLOADING_KEYS上有的值
                 if (!UNLOADING_KEYS.contains(key)) {
                     newAttach.put(key, entry.getValue());
                 }
@@ -94,6 +98,7 @@ public class ContextFilter implements Filter, Filter.Listener {
         }
 
         RpcContext context = RpcContext.getContext();
+        // 设置 RpcContext 对象
         context.setInvoker(invoker)
                 .setInvocation(invocation)
 //                .setAttachments(attachments)  // merged from dubbox
@@ -112,6 +117,7 @@ public class ContextFilter implements Filter, Filter.Listener {
 
         // merged from dubbox
         // we may already added some attachments into RpcContext before this filter (e.g. in rest protocol)
+        // 在此过滤器(例如rest协议)之前，我们可能已经在RpcContext中添加了一些附件。
         if (attachments != null) {
             if (context.getObjectAttachments() != null) {
                 context.getObjectAttachments().putAll(attachments);
@@ -120,12 +126,14 @@ public class ContextFilter implements Filter, Filter.Listener {
             }
         }
 
+        // 设置 RpcInvocation 对象的 `invoker` 属性
         if (invocation instanceof RpcInvocation) {
             ((RpcInvocation) invocation).setInvoker(invoker);
         }
 
         try {
             context.clearAfterEachInvoke(false);
+            // 服务调用
             return invoker.invoke(invocation);
         } finally {
             context.clearAfterEachInvoke(true);

@@ -23,6 +23,8 @@ import org.apache.dubbo.rpc.cluster.ConfiguratorFactory;
 /**
  * AbsentConfiguratorFactory
  *
+ * AbsentConfigurator 工厂
+ *
  */
 public class AbsentConfiguratorFactory implements ConfiguratorFactory {
 

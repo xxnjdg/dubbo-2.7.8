@@ -32,17 +32,53 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class RpcStatus {
 
+    /**
+     * 基于服务 URL 为维度的 RpcStatus 集合
+     *
+     * key：URL
+     */
     private static final ConcurrentMap<String, RpcStatus> SERVICE_STATISTICS = new ConcurrentHashMap<String, RpcStatus>();
 
+    /**
+     * 基于服务 URL + 方法维度的 RpcStatus 集合
+     *
+     * key1：URL
+     * key2：方法名
+     */
     private static final ConcurrentMap<String, ConcurrentMap<String, RpcStatus>> METHOD_STATISTICS = new ConcurrentHashMap<String, ConcurrentMap<String, RpcStatus>>();
+    // 目前没有用到
     private final ConcurrentMap<String, Object> values = new ConcurrentHashMap<String, Object>();
+    /**
+     * 调用中的次数
+     */
     private final AtomicInteger active = new AtomicInteger();
+    /**
+     * 总调用次数
+     */
     private final AtomicLong total = new AtomicLong();
+    /**
+     * 总调用失败次数
+     */
     private final AtomicInteger failed = new AtomicInteger();
+    /**
+     * 总调用时长，单位：毫秒
+     */
     private final AtomicLong totalElapsed = new AtomicLong();
+    /**
+     * 总调用失败时长，单位：毫秒
+     */
     private final AtomicLong failedElapsed = new AtomicLong();
+    /**
+     * 最大调用时长，单位：毫秒
+     */
     private final AtomicLong maxElapsed = new AtomicLong();
+    /**
+     * 最大调用失败时长，单位：毫秒
+     */
     private final AtomicLong failedMaxElapsed = new AtomicLong();
+    /**
+     * 最大调用成功时长，单位：毫秒
+     */
     private final AtomicLong succeededMaxElapsed = new AtomicLong();
 
     private RpcStatus() {
@@ -92,6 +128,8 @@ public class RpcStatus {
     }
 
     /**
+     * 服务调用开始的计数
+     *
      * @param url
      */
     public static boolean beginCount(URL url, String methodName, int max) {
@@ -106,10 +144,12 @@ public class RpcStatus {
             if (i + 1 > max) {
                 return false;
             }
+            //active +1
             if (methodStatus.active.compareAndSet(i, i + 1)) {
                 break;
             }
         }
+        //active +1
         appStatus.active.incrementAndGet();
         return true;
     }
@@ -118,6 +158,8 @@ public class RpcStatus {
      * @param url
      * @param elapsed
      * @param succeeded
+     *
+     * 服务调用结束的计数
      */
     public static void endCount(URL url, String methodName, long elapsed, boolean succeeded) {
         endCount(getStatus(url), elapsed, succeeded);
@@ -125,9 +167,11 @@ public class RpcStatus {
     }
 
     private static void endCount(RpcStatus status, long elapsed, boolean succeeded) {
+        // 次数计数
         status.active.decrementAndGet();
         status.total.incrementAndGet();
         status.totalElapsed.addAndGet(elapsed);
+        // 时长计数
         if (status.maxElapsed.get() < elapsed) {
             status.maxElapsed.set(elapsed);
         }
@@ -136,7 +180,7 @@ public class RpcStatus {
                 status.succeededMaxElapsed.set(elapsed);
             }
         } else {
-            status.failed.incrementAndGet();
+            status.failed.incrementAndGet();// 失败次数
             status.failedElapsed.addAndGet(elapsed);
             if (status.failedMaxElapsed.get() < elapsed) {
                 status.failedMaxElapsed.set(elapsed);

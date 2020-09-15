@@ -36,18 +36,33 @@ import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
 /**
  * Abstract implementation of Directory: Invoker list returned from this Directory's list method have been filtered by Routers
  *
+ * Directory 抽象实现类，实现了公用的路由规则( Router )的逻辑
  */
 public abstract class AbstractDirectory<T> implements Directory<T> {
 
     // logger
     private static final Logger logger = LoggerFactory.getLogger(AbstractDirectory.class);
 
+    /**
+     * 注册中心 URL
+     */
     private final URL url;
 
+    /**
+     * 是否已经销毁
+     */
     private volatile boolean destroyed = false;
 
+    /**
+     * 消费者 URL
+     *
+     * 若未显示调用 {@link #AbstractDirectory(URL, URL, List)} 构造方法，consumerUrl 等于 {@link #url}
+     */
     private volatile URL consumerUrl;
 
+    /**
+     * Router 数组
+     */
     protected RouterChain<T> routerChain;
 
     public AbstractDirectory(URL url) {
@@ -62,15 +77,16 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
         this.url = url.removeParameter(REFER_KEY).removeParameter(MONITOR_KEY);
         this.consumerUrl = this.url.addParameters(StringUtils.parseQueryString(url.getParameterAndDecoded(REFER_KEY)));
 
+        // 设置 Router 数组
         setRouterChain(routerChain);
     }
-
+    //获得所有服务 Invoker 集合
     @Override
     public List<Invoker<T>> list(Invocation invocation) throws RpcException {
         if (destroyed) {
             throw new RpcException("Directory already destroyed .url: " + getUrl());
         }
-
+        // 获得所有 Invoker 集合
         return doList(invocation);
     }
 

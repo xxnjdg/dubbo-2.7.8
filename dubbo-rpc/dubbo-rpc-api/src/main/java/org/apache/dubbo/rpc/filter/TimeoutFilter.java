@@ -35,6 +35,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIME_COUNTDOWN_K
 
 /**
  * Log any invocation timeout, but don't stop server from running
+ *
+ * 超时过滤器。如果服务调用超时，记录告警日志，不干涉服务的运行
  */
 @Activate(group = CommonConstants.PROVIDER)
 public class TimeoutFilter implements Filter, Filter.Listener {
@@ -52,6 +54,7 @@ public class TimeoutFilter implements Filter, Filter.Listener {
         if (obj != null) {
             TimeoutCountDown countDown = (TimeoutCountDown) obj;
             if (countDown.isExpired()) {
+                // 超过时长，打印告警日志
                 ((AppResponse) appResponse).clear(); // clear response in case of timeout.
                 if (logger.isWarnEnabled()) {
                     logger.warn("invoke timed out. method: " + invocation.getMethodName() + " arguments: " +

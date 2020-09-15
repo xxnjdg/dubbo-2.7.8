@@ -28,6 +28,8 @@ public interface GenericService {
     /**
      * Generic invocation
      *
+     * 泛化调用
+     *
      * @param method         Method name, e.g. findPerson. If there are overridden methods, parameter info is
      *                       required, e.g. findPerson(java.lang.String)
      * @param parameterTypes Parameter types

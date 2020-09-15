@@ -39,19 +39,23 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIME_COUNTDOWN_K
  *
  * @see org.apache.dubbo.rpc.Filter
  * @see RpcContext
+ *
+ * 服务消费者的 ContextFilter 实现类
  */
 @Activate(group = CONSUMER, order = -10000)
 public class ConsumerContextFilter implements Filter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 设置 RpcContext 对象
         RpcContext context = RpcContext.getContext();
         context.setInvoker(invoker)
                 .setInvocation(invocation)
                 .setLocalAddress(NetUtils.getLocalHost(), 0)
-                .setRemoteAddress(invoker.getUrl().getHost(), invoker.getUrl().getPort())
+                .setRemoteAddress(invoker.getUrl().getHost(), invoker.getUrl().getPort())// 远程地址
                 .setRemoteApplicationName(invoker.getUrl().getParameter(REMOTE_APPLICATION_KEY))
                 .setAttachment(REMOTE_APPLICATION_KEY, invoker.getUrl().getParameter(APPLICATION_KEY));
+        // 设置 RpcInvocation 对象的 `invoker` 属性
         if (invocation instanceof RpcInvocation) {
             ((RpcInvocation) invocation).setInvoker(invoker);
         }
@@ -66,6 +70,7 @@ public class ConsumerContextFilter implements Filter {
                                 + invocation.getMethodName() + ", terminate directly."), invocation);
             }
         }
+        // 服务调用
         return invoker.invoke(invocation);
     }
 

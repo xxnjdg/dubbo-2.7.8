@@ -33,6 +33,8 @@ import static org.apache.dubbo.rpc.Constants.EXECUTES_KEY;
  * The maximum parallel execution request count per method per service for the provider.If the max configured
  * <b>executes</b> is set to 10 and if invoke request where it is already 10 then it will throws exception. It
  * continue the same behaviour un till it is <10.
+ *
+ * 服务提供者每服务、每方法的最大可并行执行请求数的过滤器实现类。
  */
 @Activate(group = CommonConstants.PROVIDER, value = EXECUTES_KEY)
 public class ExecuteLimitFilter implements Filter, Filter.Listener {
@@ -44,6 +46,7 @@ public class ExecuteLimitFilter implements Filter, Filter.Listener {
         URL url = invoker.getUrl();
         String methodName = invocation.getMethodName();
         int max = url.getMethodParameter(methodName, EXECUTES_KEY, 0);
+        // 获得 RpcStatus 对象，基于服务 URL + 方法维度
         if (!RpcStatus.beginCount(url, methodName, max)) {
             throw new RpcException(RpcException.LIMIT_EXCEEDED_EXCEPTION,
                     "Failed to invoke method " + invocation.getMethodName() + " in provider " +
@@ -65,6 +68,7 @@ public class ExecuteLimitFilter implements Filter, Filter.Listener {
 
     @Override
     public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
+        // 调用结束的计数（成功）
         RpcStatus.endCount(invoker.getUrl(), invocation.getMethodName(), getElapsed(invocation), true);
     }
 

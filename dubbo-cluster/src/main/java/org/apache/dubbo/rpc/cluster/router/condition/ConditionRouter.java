@@ -51,13 +51,27 @@ import static org.apache.dubbo.rpc.cluster.Constants.RUNTIME_KEY;
 /**
  * ConditionRouter
  *
+ *
+ * 基于条件表达式的 Router 实现类。
  */
 public class ConditionRouter extends AbstractRouter {
     public static final String NAME = "condition";
 
     private static final Logger logger = LoggerFactory.getLogger(ConditionRouter.class);
+    /**
+     * 分组正则匹配，详细见 {@link #parseRule(String)} 方法
+     *
+     * 前 [] 为匹配，分隔符
+     * 后 [] 为匹配，内容
+     */
     protected static final Pattern ROUTE_PATTERN = Pattern.compile("([&!=,]*)\\s*([^&!=,\\s]+)");
+    /**
+     * 消费者匹配条件集合，通过解析【条件表达式 rule 的 `=>` 之前半部分】
+     */
     protected Map<String, MatchPair> whenCondition;
+    /**
+     * 提供者地址列表的过滤条件，通过解析【条件表达式 rule 的 `=>` 之后半部分】
+     */
     protected Map<String, MatchPair> thenCondition;
 
     private boolean enabled;
@@ -81,11 +95,14 @@ public class ConditionRouter extends AbstractRouter {
             if (rule == null || rule.trim().length() == 0) {
                 throw new IllegalArgumentException("Illegal route rule!");
             }
+            // 拆分条件变大时为 when 和 then 两部分
             rule = rule.replace("consumer.", "").replace("provider.", "");
             int i = rule.indexOf("=>");
             String whenRule = i < 0 ? null : rule.substring(0, i).trim();
             String thenRule = i < 0 ? rule.trim() : rule.substring(i + 2).trim();
+            // 解析 `whenCondition`
             Map<String, MatchPair> when = StringUtils.isBlank(whenRule) || "true".equals(whenRule) ? new HashMap<String, MatchPair>() : parseRule(whenRule);
+            // 解析 `thenCondition`
             Map<String, MatchPair> then = StringUtils.isBlank(thenRule) || "false".equals(thenRule) ? null : parseRule(thenRule);
             // NOTE: It should be determined on the business level whether the `When condition` can be empty or not.
             this.whenCondition = when;

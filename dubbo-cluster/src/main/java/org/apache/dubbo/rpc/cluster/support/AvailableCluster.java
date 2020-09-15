@@ -24,6 +24,8 @@ import org.apache.dubbo.rpc.cluster.Directory;
 /**
  * AvailableCluster
  *
+ * 调用首个可用服务器，目前用于多注册中心引用
+ *
  */
 public class AvailableCluster implements Cluster {
 

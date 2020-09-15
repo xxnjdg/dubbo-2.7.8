@@ -42,6 +42,8 @@ import java.lang.reflect.Method;
  * exception not declared on the interface</li>
  * <li>Wrap the exception not introduced in API package into RuntimeException. Framework will serialize the outer exception but stringnize its cause in order to avoid of possible serialization problem on client side</li>
  * </ol>
+ *
+ * 异常过滤器实现类
  */
 @Activate(group = CommonConstants.PROVIDER)
 public class ExceptionFilter implements Filter, Filter.Listener {
@@ -54,15 +56,18 @@ public class ExceptionFilter implements Filter, Filter.Listener {
 
     @Override
     public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
+        // 有异常，并且非泛化调用
         if (appResponse.hasException() && GenericService.class != invoker.getInterface()) {
             try {
                 Throwable exception = appResponse.getException();
 
                 // directly throw if it's checked exception
+                // 如果是checked异常，直接抛出
                 if (!(exception instanceof RuntimeException) && (exception instanceof Exception)) {
                     return;
                 }
                 // directly throw if the exception appears in the signature
+                // 在方法签名上有声明，直接抛出
                 try {
                     Method method = invoker.getInterface().getMethod(invocation.getMethodName(), invocation.getParameterTypes());
                     Class<?>[] exceptionClassses = method.getExceptionTypes();
@@ -76,25 +81,30 @@ public class ExceptionFilter implements Filter, Filter.Listener {
                 }
 
                 // for the exception not found in method's signature, print ERROR message in server's log.
+                // 未在方法签名上定义的异常，在服务器端打印 ERROR 日志
                 logger.error("Got unchecked and undeclared exception which called by " + RpcContext.getContext().getRemoteHost() + ". service: " + invoker.getInterface().getName() + ", method: " + invocation.getMethodName() + ", exception: " + exception.getClass().getName() + ": " + exception.getMessage(), exception);
 
                 // directly throw if exception class and interface class are in the same jar file.
+                // 异常类和接口类在同一 jar 包里，直接抛出
                 String serviceFile = ReflectUtils.getCodeBase(invoker.getInterface());
                 String exceptionFile = ReflectUtils.getCodeBase(exception.getClass());
                 if (serviceFile == null || exceptionFile == null || serviceFile.equals(exceptionFile)) {
                     return;
                 }
                 // directly throw if it's JDK exception
+                // 是JDK自带的异常，直接抛出
                 String className = exception.getClass().getName();
                 if (className.startsWith("java.") || className.startsWith("javax.")) {
                     return;
                 }
                 // directly throw if it's dubbo exception
+                // 是Dubbo本身的异常，直接抛出
                 if (exception instanceof RpcException) {
                     return;
                 }
 
                 // otherwise, wrap with RuntimeException and throw back to the client
+                // 否则，包装成RuntimeException抛给客户端
                 appResponse.setException(new RuntimeException(StringUtils.toString(exception)));
             } catch (Throwable e) {
                 logger.warn("Fail to ExceptionFilter when called by " + RpcContext.getContext().getRemoteHost() + ". service: " + invoker.getInterface().getName() + ", method: " + invocation.getMethodName() + ", exception: " + e.getClass().getName() + ": " + e.getMessage(), e);

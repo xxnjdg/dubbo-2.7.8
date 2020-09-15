@@ -32,6 +32,8 @@ import org.apache.dubbo.rpc.cluster.RouterFactory;
  * </ol>
  * The host value in URL points out the address of the source content of the Script Router，Registry、File etc
  *
+ * ScriptRouter 工厂实现类
+ *
  */
 public class ScriptRouterFactory implements RouterFactory {
 

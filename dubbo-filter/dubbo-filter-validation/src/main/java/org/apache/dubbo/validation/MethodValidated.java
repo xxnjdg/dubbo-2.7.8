@@ -31,10 +31,15 @@ import java.lang.annotation.Target;
  * </pre>
  * It means both Save group and Update group are needed to check when method relatedQuery is invoked.
  * </p>
+ *
+ * 方法分组验证注解
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface MethodValidated {
+    /**
+     * @return 分组集合
+     */
     Class<?>[] value() default {};
 }

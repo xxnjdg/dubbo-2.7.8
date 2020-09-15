@@ -29,6 +29,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Round robin load balance.
+ *
+ * 轮循，按公约后的权重设置轮循比率
  */
 public class RoundRobinLoadBalance extends AbstractLoadBalance {
     public static final String NAME = "roundrobin";
@@ -88,6 +90,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
 
     @Override
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
+        //key 为同一方法
         String key = invokers.get(0).getUrl().getServiceKey() + "." + invocation.getMethodName();
         ConcurrentMap<String, WeightedRoundRobin> map = methodWeightMap.computeIfAbsent(key, k -> new ConcurrentHashMap<>());
         int totalWeight = 0;
@@ -97,30 +100,38 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         WeightedRoundRobin selectedWRR = null;
         for (Invoker<T> invoker : invokers) {
             String identifyString = invoker.getUrl().toIdentityString();
+            //获取权重
             int weight = getWeight(invoker, invocation);
+            //key 每个 invoker 标识 value WeightedRoundRobin 对象
             WeightedRoundRobin weightedRoundRobin = map.computeIfAbsent(identifyString, k -> {
                 WeightedRoundRobin wrr = new WeightedRoundRobin();
                 wrr.setWeight(weight);
                 return wrr;
             });
 
+            //如果计算权重发生了变化，和weightedRoundRobin对象不一样，修改weightedRoundRobin对象权重
             if (weight != weightedRoundRobin.getWeight()) {
                 //weight changed
                 weightedRoundRobin.setWeight(weight);
             }
+            //cur = cur + weight
             long cur = weightedRoundRobin.increaseCurrent();
             weightedRoundRobin.setLastUpdate(now);
+            //
             if (cur > maxCurrent) {
                 maxCurrent = cur;
                 selectedInvoker = invoker;
                 selectedWRR = weightedRoundRobin;
             }
+            //计算总 Weight
             totalWeight += weight;
         }
         if (invokers.size() != map.size()) {
             map.entrySet().removeIf(item -> now - item.getValue().getLastUpdate() > RECYCLE_PERIOD);
         }
         if (selectedInvoker != null) {
+            //cur = cur - totalWeight 遍历完一组后，所有 invoker 权重都变成 0，又会从头开始
+            // 123123 这样遍历
             selectedWRR.sel(totalWeight);
             return selectedInvoker;
         }

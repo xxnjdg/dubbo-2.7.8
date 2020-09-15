@@ -57,6 +57,7 @@ public class GenericFilter implements Filter, Filter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation inv) throws RpcException {
+        // 泛化引用的调用
         if ((inv.getMethodName().equals($INVOKE) || inv.getMethodName().equals($INVOKE_ASYNC))
                 && inv.getArguments() != null
                 && inv.getArguments().length == 3
@@ -65,7 +66,9 @@ public class GenericFilter implements Filter, Filter.Listener {
             String[] types = (String[]) inv.getArguments()[1];
             Object[] args = (Object[]) inv.getArguments()[2];
             try {
+                // 获得对应的方法 Method 对象
                 Method method = ReflectUtils.findMethodByMethodSignature(invoker.getInterface(), name, types);
+                // 获得方法参数类型和方法参数数组
                 Class<?>[] params = method.getParameterTypes();
                 if (args == null) {
                     args = new Object[params.length];
@@ -74,17 +77,20 @@ public class GenericFilter implements Filter, Filter.Listener {
                 if (args.length != types.length) {
                     throw new RpcException("args.length != types.length");
                 }
+                // 获得 `generic` 配置项
                 String generic = inv.getAttachment(GENERIC_KEY);
 
                 if (StringUtils.isBlank(generic)) {
                     generic = RpcContext.getContext().getAttachment(GENERIC_KEY);
                 }
 
+                // 【第一步】`true` ，反序列化参数，仅有 Map => POJO
                 if (StringUtils.isEmpty(generic)
                         || ProtocolUtils.isDefaultGenericSerialization(generic)
                         || ProtocolUtils.isGenericReturnRawResult(generic)) {
                     args = PojoUtils.realize(args, params, method.getGenericParameterTypes());
                 } else if (ProtocolUtils.isJavaGenericSerialization(generic)) {
+                    // 【第一步】`nativejava` ，反序列化参数，byte[] => 方法参数
                     for (int i = 0; i < args.length; i++) {
                         if (byte[].class == args[i].getClass()) {
                             try (UnsafeByteArrayInputStream is = new UnsafeByteArrayInputStream((byte[]) args[i])) {
@@ -105,6 +111,7 @@ public class GenericFilter implements Filter, Filter.Listener {
                         }
                     }
                 } else if (ProtocolUtils.isBeanGenericSerialization(generic)) {
+                    // 【第一步】`bean` ，反序列化参数，JavaBeanDescriptor => 方法参数
                     for (int i = 0; i < args.length; i++) {
                         if (args[i] instanceof JavaBeanDescriptor) {
                             args[i] = JavaBeanSerializeUtil.deserialize((JavaBeanDescriptor) args[i]);
@@ -164,6 +171,7 @@ public class GenericFilter implements Filter, Filter.Listener {
                 generic = RpcContext.getContext().getAttachment(GENERIC_KEY);
             }
 
+            // 【第三步】若是异常结果，并且非 GenericException 异常，则使用 GenericException 包装
             if (appResponse.hasException()) {
                 Throwable appException = appResponse.getException();
                 if (appException instanceof GenericException) {
@@ -176,6 +184,7 @@ public class GenericFilter implements Filter, Filter.Listener {
                 appResponse.setException(appException);
             }
             if (ProtocolUtils.isJavaGenericSerialization(generic)) {
+                // 【第三步】`nativejava` ，序列化结果，结果 => byte[]
                 try {
                     UnsafeByteArrayOutputStream os = new UnsafeByteArrayOutputStream(512);
                     ExtensionLoader.getExtensionLoader(Serialization.class).getExtension(GENERIC_SERIALIZATION_NATIVE_JAVA).serialize(null, os).writeObject(appResponse.getValue());
@@ -187,6 +196,7 @@ public class GenericFilter implements Filter, Filter.Listener {
                                     "] serialize result failed.", e);
                 }
             } else if (ProtocolUtils.isBeanGenericSerialization(generic)) {
+                // 【第三步】`bean` ，序列化结果，结果 => JavaBeanDescriptor
                 appResponse.setValue(JavaBeanSerializeUtil.serialize(appResponse.getValue(), JavaBeanAccessor.METHOD));
             } else if (ProtocolUtils.isProtobufGenericSerialization(generic)) {
                 try {
@@ -203,6 +213,7 @@ public class GenericFilter implements Filter, Filter.Listener {
             } else if(ProtocolUtils.isGenericReturnRawResult(generic)) {
                 return;
             } else {
+                // 【第三步】`true` ，序列化结果，仅有 POJO => Map
                 appResponse.setValue(PojoUtils.generalize(appResponse.getValue()));
             }
         }

@@ -38,6 +38,8 @@ public interface Router extends Comparable<Router> {
     /**
      * Get the router url.
      *
+     *  路由规则 URL
+     *
      * @return url
      */
     URL getUrl();
@@ -50,6 +52,9 @@ public interface Router extends Comparable<Router> {
      * @param invocation invocation
      * @return routed invokers
      * @throws RpcException
+     *
+     *
+     * 路由，筛选匹配的 Invoker 集合
      */
     <T> List<Invoker<T>> route(List<Invoker<T>> invokers, URL url, Invocation invocation) throws RpcException;
 

@@ -35,6 +35,8 @@ import static org.apache.dubbo.rpc.Constants.TPS_LIMIT_RATE_KEY;
  * as it limit checker. If a provider service method is configured with <b>tps</b>(optionally with <b>tps.interval</b>),then
  * if invocation count exceed the configured <b>tps</b> value (default is -1 which means unlimited) then invocation will get
  * RpcException.
+ *
+ * TPS 限流过滤器实现类
  * */
 @Activate(group = CommonConstants.PROVIDER, value = TPS_LIMIT_RATE_KEY)
 public class TpsLimitFilter implements Filter {

@@ -34,6 +34,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SPLIT_PATT
 
 /**
  * ConsistentHashLoadBalance
+ *
+ * 一致性 Hash，相同参数的请求总是发到同一提供者
  */
 public class ConsistentHashLoadBalance extends AbstractLoadBalance {
     public static final String NAME = "consistenthash";

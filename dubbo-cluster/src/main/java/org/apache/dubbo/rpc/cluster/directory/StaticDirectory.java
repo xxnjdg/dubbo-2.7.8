@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class StaticDirectory<T> extends AbstractDirectory<T> {
     private static final Logger logger = LoggerFactory.getLogger(StaticDirectory.class);
-
+    //Invoker 集合
     private final List<Invoker<T>> invokers;
 
     public StaticDirectory(List<Invoker<T>> invokers) {
@@ -49,6 +49,7 @@ public class StaticDirectory<T> extends AbstractDirectory<T> {
     }
 
     public StaticDirectory(URL url, List<Invoker<T>> invokers, RouterChain<T> routerChain) {
+        // 默认使用 `url` 参数。当它为空时，使用 `invokers[0].url` 。
         super(url == null && CollectionUtils.isNotEmpty(invokers) ? invokers.get(0).getUrl() : url, routerChain);
         if (CollectionUtils.isEmpty(invokers)) {
             throw new IllegalArgumentException("invokers == null");

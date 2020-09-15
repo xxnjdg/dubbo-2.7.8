@@ -30,11 +30,15 @@ import java.util.List;
  * <a href="http://en.wikipedia.org/wiki/Directory_service">Directory Service</a>
  *
  * @see org.apache.dubbo.rpc.cluster.Cluster#join(Directory)
+ *
+ * 继承 Node 接口，Directory 接口
  */
 public interface Directory<T> extends Node {
 
     /**
      * get service type.
+     *
+     * 获得服务类型，例如：com.alibaba.dubbo.demo.DemoService
      *
      * @return service type.
      */
@@ -44,6 +48,8 @@ public interface Directory<T> extends Node {
      * list invokers.
      *
      * @return invokers
+     *
+     * 获得所有服务 Invoker 集合
      */
     List<Invoker<T>> list(Invocation invocation) throws RpcException;
 

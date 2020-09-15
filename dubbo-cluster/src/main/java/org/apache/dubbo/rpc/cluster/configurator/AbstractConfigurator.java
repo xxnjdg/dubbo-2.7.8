@@ -47,6 +47,9 @@ import static org.apache.dubbo.rpc.cluster.Constants.OVERRIDE_PROVIDERS_KEY;
  */
 public abstract class AbstractConfigurator implements Configurator {
 
+    /**
+     * 配置规则 URL
+     */
     private final URL configuratorUrl;
 
     public AbstractConfigurator(URL url) {
@@ -64,11 +67,13 @@ public abstract class AbstractConfigurator implements Configurator {
     @Override
     public URL configure(URL url) {
         // If override url is not enabled or is invalid, just return.
+        //如果覆盖网址未启用或无效，请返回。
         if (!configuratorUrl.getParameter(ENABLED_KEY, true) || configuratorUrl.getHost() == null || url == null || url.getHost() == null) {
             return url;
         }
         /*
          * This if branch is created since 2.7.0.
+         * 如果分支从2.7.0开始创建。
          */
         String apiVersion = configuratorUrl.getParameter(CONFIG_VERSION_KEY);
         if (StringUtils.isNotEmpty(apiVersion)) {
@@ -114,15 +119,18 @@ public abstract class AbstractConfigurator implements Configurator {
     }
 
     private URL configureIfMatch(String host, URL url) {
+        // 匹配 Host
         if (ANYHOST_VALUE.equals(configuratorUrl.getHost()) || host.equals(configuratorUrl.getHost())) {
             // TODO, to support wildcards
             String providers = configuratorUrl.getParameter(OVERRIDE_PROVIDERS_KEY);
             if (StringUtils.isEmpty(providers) || providers.contains(url.getAddress()) || providers.contains(ANYHOST_VALUE)) {
+                // 匹配 "application"
                 String configApplication = configuratorUrl.getParameter(APPLICATION_KEY,
                         configuratorUrl.getUsername());
                 String currentApplication = url.getParameter(APPLICATION_KEY, url.getUsername());
                 if (configApplication == null || ANY_VALUE.equals(configApplication)
                         || configApplication.equals(currentApplication)) {
+                    // 配置 URL 中的条件 KEYS 集合。其中下面四个 KEY ，不算是条件，而是内置属性。考虑到下面要移除，所以添加到该集合中。
                     Set<String> conditionKeys = new HashSet<String>();
                     conditionKeys.add(CATEGORY_KEY);
                     conditionKeys.add(Constants.CHECK_KEY);
@@ -135,17 +143,20 @@ public abstract class AbstractConfigurator implements Configurator {
                     conditionKeys.add(CONFIG_VERSION_KEY);
                     conditionKeys.add(COMPATIBLE_CONFIG_KEY);
                     conditionKeys.add(INTERFACES);
+                    // 判断传入的 url 是否匹配配置规则 URL 的条件。除了 "application" 和 "side" 之外，带有 `"~"` 开头的 KEY ，也是条件。
                     for (Map.Entry<String, String> entry : configuratorUrl.getParameters().entrySet()) {
                         String key = entry.getKey();
                         String value = entry.getValue();
                         if (key.startsWith("~") || APPLICATION_KEY.equals(key) || SIDE_KEY.equals(key)) {
                             conditionKeys.add(key);
+                            // 若不相等，则不匹配配置规则，直接返回
                             if (value != null && !ANY_VALUE.equals(value)
                                     && !value.equals(url.getParameter(key.startsWith("~") ? key.substring(1) : key))) {
                                 return url;
                             }
                         }
                     }
+                    // 移除条件 KEYS 集合，并配置到 URL 中
                     return doConfigure(url, configuratorUrl.removeParameters(conditionKeys));
                 }
             }
